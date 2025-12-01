@@ -4,10 +4,9 @@ import {LineService} from "./LineService.ts";
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 
 export class SceneService {
-    private scene!: THREE.Scene;
-    private camera!: THREE.OrthographicCamera;
+    private readonly scene!: THREE.Scene;
+    private readonly camera!: THREE.OrthographicCamera;
     private renderer!: THREE.WebGLRenderer;
-    //private cube!: THREE.Mesh;
     private frustumSize = 5;
 
     private canvasContainer: HTMLElement | null = null;
@@ -22,10 +21,9 @@ export class SceneService {
         this.scene = this.createScene();
         this.camera = this.createCamera();
         this.renderer = this.createRenderer();
-        //this.cube = this.createCube();
 
         this.setupEventListeners();
-        this.startAnimation();
+        this.startRendering();
     }
 
     private updateSizeFromContainer(): void {
@@ -80,14 +78,6 @@ export class SceneService {
         return renderer;
     }
 
-    /*private createCube(): THREE.Mesh {
-        const geometry = new THREE.BoxGeometry();
-        const material = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true });
-        const cube = new THREE.Mesh(geometry, material);
-        this.scene.add(cube);
-        return cube;
-    }*/
-
     private setupEventListeners(): void {
         window.addEventListener('resize', () => {
             // refresh stored container and sizes
@@ -104,28 +94,12 @@ export class SceneService {
         });
     }
 
-    private animate = () => {
-        // Вращение куба
-        /*this.cube.rotation.x += 0.01;
-        this.cube.rotation.y += 0.01;*/
-
+    private renderAll = () => {
         this.renderer.render(this.scene, this.camera);
     }
 
-    private startAnimation(): void {
-        this.renderer.setAnimationLoop(this.animate);
-    }
-
-    public getScene(): THREE.Scene {
-        return this.scene;
-    }
-
-    public getCamera(): THREE.OrthographicCamera {
-        return this.camera;
-    }
-
-    public getRenderer(): THREE.WebGLRenderer {
-        return this.renderer;
+    private startRendering(): void {
+        this.renderer.setAnimationLoop(this.renderAll);
     }
 
     getDrawService() {
