@@ -1,13 +1,21 @@
 import * as THREE from 'three';
 
 export class SceneService {
-    private scene: THREE.Scene;
-    private camera: THREE.OrthographicCamera;
-    private renderer: THREE.WebGLRenderer;
-    private cube: THREE.Mesh;
+    private scene!: THREE.Scene;
+    private camera!: THREE.OrthographicCamera;
+    private renderer!: THREE.WebGLRenderer;
+    private cube!: THREE.Mesh;
     private frustumSize = 5;
 
+    private canvasContainer: HTMLElement | null = null;
+    private width: number = 0;
+    private height: number = 0;
+
     constructor() {
+        this.updateSizeFromContainer();
+
+        if (!this.canvasContainer) return;
+
         this.scene = this.createScene();
         this.camera = this.createCamera();
         this.renderer = this.createRenderer();
@@ -17,6 +25,16 @@ export class SceneService {
         this.startAnimation();
     }
 
+    private updateSizeFromContainer(): void {
+        this.canvasContainer = document.getElementById('app');
+        if (!this.canvasContainer) {
+            console.error('SceneService: element with id="app" not found.');
+            return;
+        }
+        this.width = this.canvasContainer.clientWidth;
+        this.height = this.canvasContainer.clientHeight;
+    }
+
     private createScene(): THREE.Scene {
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x202020); // Темно-серый фон
@@ -24,7 +42,8 @@ export class SceneService {
     }
 
     private createCamera(): THREE.OrthographicCamera {
-        const aspect = window.innerWidth / window.innerHeight;
+        const aspect = this.width / this.height;
+
         const camera = new THREE.OrthographicCamera(
             this.frustumSize * aspect / -2,  // left
             this.frustumSize * aspect / 2,   // right
@@ -39,8 +58,8 @@ export class SceneService {
 
     private createRenderer(): THREE.WebGLRenderer {
         const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
+        renderer.setSize(this.width, this.height);
+        this.canvasContainer!.appendChild(renderer.domElement);
         return renderer;
     }
 
@@ -54,13 +73,16 @@ export class SceneService {
 
     private setupEventListeners(): void {
         window.addEventListener('resize', () => {
-            const aspect = window.innerWidth / window.innerHeight;
+            // refresh stored container and sizes
+            this.updateSizeFromContainer();
+
+            const aspect = this.width / this.height;
             this.camera.left = this.frustumSize * aspect / -2;
             this.camera.right = this.frustumSize * aspect / 2;
             this.camera.top = this.frustumSize / 2;
             this.camera.bottom = this.frustumSize / -2;
             this.camera.updateProjectionMatrix();
-            this.renderer.setSize(window.innerWidth, window.innerHeight);
+            this.renderer.setSize(this.width, this.height);
         });
     }
 
@@ -88,4 +110,3 @@ export class SceneService {
         return this.renderer;
     }
 }
-
