@@ -5,3 +5,25 @@ body {
 canvas {
     display: block;
 }
+
+#loadJsonBtn {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    z-index: 1000;
+}
+
+#loadJsonBtn:hover {
+    background-color: #45a049;
+}
+
+#loadJsonBtn:active {
+    background-color: #3d8b40;
+}

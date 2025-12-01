@@ -1,3 +1,4 @@
 import { App } from './services/App';
 
-new App();
+const app = new App();
+app.setupUI();
