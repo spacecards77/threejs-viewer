@@ -1,3 +1,3 @@
-import { App } from './services/App';
+import { App } from './App.ts';
 
 new App();
