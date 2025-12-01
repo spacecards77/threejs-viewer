@@ -1,10 +1,12 @@
 import * as THREE from 'three';
+import {DrawService} from "./DrawService.ts";
+import {LineService} from "./LineService.ts";
 
 export class SceneService {
     private scene!: THREE.Scene;
     private camera!: THREE.OrthographicCamera;
     private renderer!: THREE.WebGLRenderer;
-    private cube!: THREE.Mesh;
+    //private cube!: THREE.Mesh;
     private frustumSize = 5;
 
     private canvasContainer: HTMLElement | null = null;
@@ -19,7 +21,7 @@ export class SceneService {
         this.scene = this.createScene();
         this.camera = this.createCamera();
         this.renderer = this.createRenderer();
-        this.cube = this.createCube();
+        //this.cube = this.createCube();
 
         this.setupEventListeners();
         this.startAnimation();
@@ -52,7 +54,8 @@ export class SceneService {
             0.1,                             // near
             1000                             // far
         );
-        camera.position.z = 5;
+        camera.position.set(15, -25, 40);
+        camera.lookAt(15, 20, 10);
         return camera;
     }
 
@@ -72,13 +75,13 @@ export class SceneService {
         return renderer;
     }
 
-    private createCube(): THREE.Mesh {
+    /*private createCube(): THREE.Mesh {
         const geometry = new THREE.BoxGeometry();
         const material = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: true });
         const cube = new THREE.Mesh(geometry, material);
         this.scene.add(cube);
         return cube;
-    }
+    }*/
 
     private setupEventListeners(): void {
         window.addEventListener('resize', () => {
@@ -98,8 +101,8 @@ export class SceneService {
 
     private animate = () => {
         // Вращение куба
-        this.cube.rotation.x += 0.01;
-        this.cube.rotation.y += 0.01;
+        /*this.cube.rotation.x += 0.01;
+        this.cube.rotation.y += 0.01;*/
 
         this.renderer.render(this.scene, this.camera);
     }
@@ -118,5 +121,9 @@ export class SceneService {
 
     public getRenderer(): THREE.WebGLRenderer {
         return this.renderer;
+    }
+
+    getDrawService() {
+        return new DrawService(new LineService(this.scene));
     }
 }

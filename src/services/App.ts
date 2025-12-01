@@ -1,15 +1,18 @@
 import { SceneService } from './SceneService';
 import { JsonService } from './JsonService';
 import { Construction } from "../entities";
+import type {DrawService} from "./DrawService.ts";
 
 export class App {
     private sceneService: SceneService;
     private jsonService: JsonService;
+    private drawService: DrawService;
     private construction: Construction | null = null;
 
     constructor() {
         this.sceneService = new SceneService();
         this.jsonService = new JsonService();
+        this.drawService = this.sceneService.getDrawService();
     }
 
     public getSceneService(): SceneService {
@@ -50,7 +53,9 @@ export class App {
             try {
                 const jsonString = event.target?.result as string;
                 this.construction = this.jsonService.deserialize(jsonString);
-                console.log('Construction loaded successfully:', this.construction);
+                //console.log('Construction loaded successfully:', this.construction);
+
+                this.drawService.drawConstruction(this.construction);
             } catch (error) {
                 console.error('Error loading JSON file:', error);
                 alert(`Ошибка загрузки файла: ${error}`);
