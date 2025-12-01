@@ -56,9 +56,18 @@ export class SceneService {
         return camera;
     }
 
+    private updateRendererPixelRatioAndSize(): void {
+        if (!this.renderer) return;
+        // cap devicePixelRatio for performance (2 is a reasonable default cap)
+        const capped = Math.min(window.devicePixelRatio || 1, 2);
+        this.renderer.setPixelRatio(capped);
+        this.renderer.setSize(this.width, this.height);
+    }
+
     private createRenderer(): THREE.WebGLRenderer {
         const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(this.width, this.height);
+        this.renderer = renderer;
+        this.updateRendererPixelRatioAndSize();
         this.canvasContainer!.appendChild(renderer.domElement);
         return renderer;
     }
@@ -82,7 +91,8 @@ export class SceneService {
             this.camera.top = this.frustumSize / 2;
             this.camera.bottom = this.frustumSize / -2;
             this.camera.updateProjectionMatrix();
-            this.renderer.setSize(this.width, this.height);
+
+            this.updateRendererPixelRatioAndSize();
         });
     }
 
