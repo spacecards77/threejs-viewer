@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {DrawService} from "./DrawService.ts";
 import {LineService} from "./LineService.ts";
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 
 export class SceneService {
     private scene!: THREE.Scene;
@@ -55,7 +56,11 @@ export class SceneService {
             1000                             // far
         );
         camera.position.set(15, -25, 40);
-        camera.lookAt(15, 20, 10);
+
+        const controls = new OrbitControls(camera, this.canvasContainer);
+        controls.target.set(15, 20, 10);
+        controls.update();
+
         return camera;
     }
 
