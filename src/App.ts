@@ -38,7 +38,7 @@ export class App {
 
     private processConstruction(construction: Construction) {
         this.construction = construction;
-        this.sceneService.updateSceneFor(construction.geometry);
+        this.sceneService.updateSceneForGeometry(construction.geometry);
         this.drawService.drawConstruction(this.construction);
     }
 }

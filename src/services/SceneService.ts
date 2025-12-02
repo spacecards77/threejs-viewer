@@ -2,13 +2,13 @@ import * as THREE from 'three';
 import {OrthographicCamera} from 'three';
 import {DrawService} from "./DrawService.ts";
 import {LineService} from "./LineService.ts";
-import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import {TrackballControls} from 'three/addons/controls/TrackballControls.js';
 import type {IGeometry} from "../entities/IGeometry.ts";
 
 export class SceneService {
     private readonly scene!: THREE.Scene;
     private readonly camera!: THREE.OrthographicCamera;
-    private readonly cameraControls!: OrbitControls;
+    private readonly cameraControls!: TrackballControls;
 
     private renderer!: THREE.WebGLRenderer;
     private frustumSize = 5;
@@ -18,14 +18,14 @@ export class SceneService {
     private height: number = 0;
 
     constructor() {
-        this.updateSizeFromContainer();
+        this.updateSizeForContainer();
 
         if (!this.canvasContainer) return;
 
         this.scene = this.createScene();
         this.camera = this.createCamera();
         this.cameraControls = this.createCameraControls(this.camera);
-        this.updateSceneFor(new StartGeometry());
+        this.updateSceneForGeometry(new StartGeometry());
 
         this.renderer = this.createRenderer();
 
@@ -33,14 +33,15 @@ export class SceneService {
         this.startRendering();
     }
 
-    public updateSceneFor(geometry: IGeometry) {
-        this.camera.position.set(15, -25, 40);
+    public updateSceneForGeometry(geometry: IGeometry) {
+        this.camera.position.set(30, -50, 80);
 
         this.cameraControls.target = geometry.getCenter();
+        //this.cameraControls.minTargetRadius = 50;
         this.cameraControls.update();
     }
 
-    private updateSizeFromContainer(): void {
+    private updateSizeForContainer(): void {
         this.canvasContainer = document.getElementById('app');
         if (!this.canvasContainer) {
             console.error('SceneService: element with id="app" not found.');
@@ -72,7 +73,7 @@ export class SceneService {
     }
 
     private createCameraControls(camera: OrthographicCamera) {
-        const cameraControls = new OrbitControls(camera, this.canvasContainer);
+        const cameraControls = new TrackballControls(camera, this.canvasContainer);
         cameraControls.target.set(15, 20, 10);
 
         return cameraControls;
@@ -97,7 +98,7 @@ export class SceneService {
     private setupEventListeners(): void {
         window.addEventListener('resize', () => {
             // refresh stored container and sizes
-            this.updateSizeFromContainer();
+            this.updateSizeForContainer();
 
             const aspect = this.width / this.height;
             this.camera.left = this.frustumSize * aspect / -2;
@@ -111,6 +112,7 @@ export class SceneService {
     }
 
     private renderAll = () => {
+        this.cameraControls.update();
         this.renderer.render(this.scene, this.camera);
     }
 
