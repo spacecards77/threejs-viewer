@@ -11,7 +11,7 @@ export class SceneService {
     private readonly cameraControls!: TrackballControls;
 
     private renderer!: THREE.WebGLRenderer;
-    private frustumSize = 5;
+    private frustumSize = 40;
 
     private canvasContainer: HTMLElement | null = null;
     private width: number = 0;
@@ -34,19 +34,18 @@ export class SceneService {
     }
 
     public updateSceneForGeometry(geometry: IGeometry) {
-        this.camera.position.set(30, -50, 80);
+        let center = geometry.getCenter();
 
-        this.cameraControls.target = geometry.getCenter();
+        this.camera.position.set(center.x, -50, center.z + 20);
+
+        this.cameraControls.target = center;
 
         this.cameraControls.keys = ['ControlLeft', '', ''];
         this.cameraControls.mouseButtons = {
             MIDDLE: THREE.MOUSE.PAN,
             LEFT: null,
-            RIGHT: null
+            RIGHT: THREE.MOUSE.ROTATE
         };
-
-        this.cameraControls.rotateSpeed = 2;
-        this.cameraControls.panSpeed = 2;
 
         this.cameraControls.update();
     }
