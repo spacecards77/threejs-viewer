@@ -14,21 +14,31 @@ export class App {
         this.sceneService = new SceneService();
         this.drawService = this.sceneService.getDrawService();
 
-        new LoadJsonUiController((construction: Construction | null) => {
-            if (construction) {
-                this.construction = construction;
-                this.drawService.drawConstruction(this.construction);
-            } else {
-                // handle null case if needed (error already shown in controller)
-                this.construction = null;
-            }
-        });
+        // Create a single callback handler and pass it to both the UI loader and the auto-loader
+        new LoadJsonUiController(this.handleConstructionLoaded);
 
         // If configured to autoload a JSON path, try to fetch and draw it now.
         const path = config.autoLoadJson?.trim();
         if (path) {
-            const auto = new AutoLoadJsonService(this.drawService);
+            const auto = new AutoLoadJsonService(this.handleConstructionLoaded);
             void auto.tryAutoload(path);
         }
+    }
+
+    // Unified callback used by both LoadJsonUiController and AutoLoadJsonService.
+    // It delegates to processConstruction when a valid construction is provided,
+    // otherwise clears the current construction (controller already shows errors).
+    private handleConstructionLoaded = (construction: Construction | null): void => {
+        if (construction) {
+            this.processConstruction(construction);
+        } else {
+            this.construction = null;
+        }
+    };
+
+    private processConstruction(construction: Construction) {
+        this.construction = construction;
+        this.sceneService.updateSceneFor(construction.geometry);
+        this.drawService.drawConstruction(this.construction);
     }
 }

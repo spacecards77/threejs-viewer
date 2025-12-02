@@ -1,22 +1,17 @@
 // AutoLoadJsonService: responsible for fetching a JSON file from the public folder,
 // deserializing it to a Construction and drawing it via DrawService.
-import { JsonService } from './JsonService';
-import { DrawService } from './DrawService';
-import type { Construction } from '../entities';
+import {JsonService} from './JsonService';
+import type {Construction} from '../entities';
 
 export class AutoLoadJsonService {
     private readonly jsonService: JsonService;
-    private readonly drawService: DrawService;
+    private onConstructionLoaded?: (construction: Construction | null) => void;
 
-    constructor(drawService: DrawService) {
+    constructor(onConstructionLoaded?: (construction: Construction | null) => void) {
         this.jsonService = new JsonService();
-        this.drawService = drawService;
+        this.onConstructionLoaded = onConstructionLoaded;
     }
 
-    /**
-     * Attempt to fetch and draw the JSON model at `url`.
-     * `url` can be '/modelData.json' or 'modelData.json' (we normalize it to start with '/').
-     */
     public async tryAutoload(url: string): Promise<void> {
         if (!url || url.trim() === '') return;
 
@@ -29,17 +24,15 @@ export class AutoLoadJsonService {
 
             const text = await resp.text();
             const construction: Construction = this.jsonService.deserialize(text);
-            if (construction) {
-                this.drawService.drawConstruction(construction as any);
-                console.info(`Auto-loaded and drew construction from ${normalized}`);
-            }
+            this.onConstructionLoaded?.(construction);
         } catch (err) {
             console.error('AutoLoadJsonService: autoload failed', err);
             if (typeof window !== 'undefined') {
                 // user-visible notification
                 alert(`Ошибка автозагрузки модели: ${err}`);
             }
+            // Notify caller about the failure
+            this.onConstructionLoaded?.(null);
         }
     }
 }
-

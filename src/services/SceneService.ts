@@ -1,11 +1,15 @@
 import * as THREE from 'three';
+import {OrthographicCamera} from 'three';
 import {DrawService} from "./DrawService.ts";
 import {LineService} from "./LineService.ts";
 import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+import type {IGeometry} from "../entities/IGeometry.ts";
 
 export class SceneService {
     private readonly scene!: THREE.Scene;
     private readonly camera!: THREE.OrthographicCamera;
+    private readonly cameraControls!: OrbitControls;
+
     private renderer!: THREE.WebGLRenderer;
     private frustumSize = 5;
 
@@ -20,10 +24,20 @@ export class SceneService {
 
         this.scene = this.createScene();
         this.camera = this.createCamera();
+        this.cameraControls = this.createCameraControls(this.camera);
+        this.updateSceneFor(new StartGeometry());
+
         this.renderer = this.createRenderer();
 
         this.setupEventListeners();
         this.startRendering();
+    }
+
+    public updateSceneFor(geometry: IGeometry) {
+        this.camera.position.set(15, -25, 40);
+
+        this.cameraControls.target = geometry.getCenter();
+        this.cameraControls.update();
     }
 
     private updateSizeFromContainer(): void {
@@ -53,13 +67,15 @@ export class SceneService {
             0.1,                             // near
             1000                             // far
         );
-        camera.position.set(15, -25, 40);
-
-        const controls = new OrbitControls(camera, this.canvasContainer);
-        controls.target.set(15, 20, 10);
-        controls.update();
 
         return camera;
+    }
+
+    private createCameraControls(camera: OrthographicCamera) {
+        const cameraControls = new OrbitControls(camera, this.canvasContainer);
+        cameraControls.target.set(15, 20, 10);
+
+        return cameraControls;
     }
 
     private updateRendererPixelRatioAndSize(): void {
@@ -71,7 +87,7 @@ export class SceneService {
     }
 
     private createRenderer(): THREE.WebGLRenderer {
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        const renderer = new THREE.WebGLRenderer({antialias: true});
         this.renderer = renderer;
         this.updateRendererPixelRatioAndSize();
         this.canvasContainer!.appendChild(renderer.domElement);
@@ -104,5 +120,11 @@ export class SceneService {
 
     getDrawService() {
         return new DrawService(new LineService(this.scene));
+    }
+}
+
+class StartGeometry implements IGeometry {
+    getCenter(): THREE.Vector3 {
+        return new THREE.Vector3(0, 0, 0);
     }
 }
