@@ -37,7 +37,17 @@ export class SceneService {
         this.camera.position.set(30, -50, 80);
 
         this.cameraControls.target = geometry.getCenter();
-        //this.cameraControls.minTargetRadius = 50;
+
+        this.cameraControls.keys = ['ControlLeft', '', ''];
+        this.cameraControls.mouseButtons = {
+            MIDDLE: THREE.MOUSE.PAN,
+            LEFT: null,
+            RIGHT: null
+        };
+
+        this.cameraControls.rotateSpeed = 2;
+        this.cameraControls.panSpeed = 2;
+
         this.cameraControls.update();
     }
 
@@ -73,10 +83,7 @@ export class SceneService {
     }
 
     private createCameraControls(camera: OrthographicCamera) {
-        const cameraControls = new TrackballControls(camera, this.canvasContainer);
-        cameraControls.target.set(15, 20, 10);
-
-        return cameraControls;
+        return new TrackballControls(camera, this.canvasContainer);
     }
 
     private updateRendererPixelRatioAndSize(): void {
