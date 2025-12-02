@@ -63,7 +63,10 @@ export class SceneService {
 
     private createScene(): THREE.Scene {
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x000000); // Темно-серый фон
+        scene.background = new THREE.Color(0x000000);
+        const axesHelper = new THREE.AxesHelper( 5 );
+        scene.add(axesHelper);
+
         return scene;
     }
 
