@@ -8,7 +8,7 @@ export class DrawService {
         this.lineService = lineService;
     }
 
-    drawConstruction(construction: Construction, options?: { color?: THREE.Color | number }) {
+    drawConstruction(construction: Construction) {
         this.lineService.clearAllLines();
 
         const geom = construction.geometry;
@@ -22,7 +22,7 @@ export class DrawService {
             }
             const p1 = new THREE.Vector3(n1.x, n1.y, n1.z);
             const p2 = new THREE.Vector3(n2.x, n2.y, n2.z);
-            this.lineService.drawLine(p1, p2, options);
+            this.lineService.drawLine(p1, p2, { color: 0x99CCCC});
         }
 
         console.log(`Model displayed: ${geom.members.length} members drawn`);
