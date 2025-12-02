@@ -47,6 +47,7 @@ export class SceneService {
             RIGHT: THREE.MOUSE.ROTATE
         };
 
+        this.cameraControls.panSpeed = 3;
         this.cameraControls.update();
     }
 
