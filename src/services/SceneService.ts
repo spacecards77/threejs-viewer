@@ -116,6 +116,7 @@ export class SceneService {
             this.camera.top = this.frustumSize / 2;
             this.camera.bottom = this.frustumSize / -2;
             this.camera.updateProjectionMatrix();
+            this.cameraControls.handleResize();
 
             this.updateRendererPixelRatioAndSize();
         });
