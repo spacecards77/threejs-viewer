@@ -1,11 +1,15 @@
 import * as THREE from 'three';
 
 export class LineService {
-    private _lines: THREE.Line[] = [];
-    private readonly _scene: THREE.Scene;
+    private lines: THREE.Line[] = [];
+    private readonly scene: THREE.Scene;
+    private readonly linesParent: THREE.Group;
 
     constructor(scene: THREE.Scene) {
-        this._scene = scene;
+        this.scene = scene;
+        this.linesParent = new THREE.Group();
+        this.linesParent.name = 'LinesParent';
+        this.scene.add(this.linesParent);
     }
 
     drawLine(start: THREE.Vector3, end: THREE.Vector3, options?: { color?: THREE.Color | number }): THREE.Line {
@@ -13,21 +17,21 @@ export class LineService {
         const geometry = new THREE.BufferGeometry().setFromPoints([start, end]);
         const line = new THREE.Line(geometry, material);
 
-        this._scene.add(line);
-        this._lines.push(line);
+        this.linesParent.add(line);
+        this.lines.push(line);
         return line;
     }
 
     clearAllLines(): void {
-        for (const line of this._lines) {
+        for (const line of this.lines) {
             line.geometry.dispose();
             if (Array.isArray(line.material)) {
                 line.material.forEach(m => m.dispose());
             } else {
                 line.material.dispose();
             }
-            this._scene.remove(line);
+            this.linesParent.remove(line);
         }
-        this._lines = [];
+        this.lines = [];
     }
 }
