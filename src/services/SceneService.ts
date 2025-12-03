@@ -39,16 +39,6 @@ export class SceneService {
         this.camera.position.set(center.x, -50, center.z + 20);
 
         this.cameraControls.target = center;
-
-        this.cameraControls.keys = ['ControlLeft', '', ''];
-        this.cameraControls.mouseButtons = {
-            MIDDLE: THREE.MOUSE.PAN,
-            LEFT: null,
-            RIGHT: THREE.MOUSE.ROTATE
-        };
-
-        this.cameraControls.panSpeed = 3;
-        this.cameraControls.update();
     }
 
     private updateSizeForContainer(): void {
@@ -64,7 +54,7 @@ export class SceneService {
     private createScene(): THREE.Scene {
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x000000);
-        const axesHelper = new THREE.AxesHelper( 5 );
+        const axesHelper = new THREE.AxesHelper(5);
         scene.add(axesHelper);
 
         return scene;
@@ -86,7 +76,16 @@ export class SceneService {
     }
 
     private createCameraControls(camera: OrthographicCamera) {
-        return new TrackballControls(camera, this.canvasContainer);
+        const cameraControls = new TrackballControls(camera, this.canvasContainer);
+        cameraControls.keys = ['ControlLeft', '', ''];
+        cameraControls.mouseButtons = {
+            MIDDLE: THREE.MOUSE.PAN,
+            LEFT: null,
+            RIGHT: THREE.MOUSE.ROTATE
+        };
+        cameraControls.panSpeed = 3;
+
+        return cameraControls;
     }
 
     private updateRendererPixelRatioAndSize(): void {
