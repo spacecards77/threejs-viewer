@@ -31,6 +31,7 @@ class CustomTrackballControls extends EventDispatcher<CustomTrackballControlsEve
 	rotateSpeed: number;
 	zoomSpeed: number;
 	panSpeed: number;
+	zAlignSpeed: number;
 
 	noRotate: boolean;
 	noZoom: boolean;
@@ -89,6 +90,7 @@ class CustomTrackballControls extends EventDispatcher<CustomTrackballControlsEve
 		this.rotateSpeed = 1.0;
 		this.zoomSpeed = 1.2;
 		this.panSpeed = 0.3;
+		this.zAlignSpeed = 0.1; // Speed of alignment to Z-axis (0.0 - 1.0, where 1.0 is instant)
 
 		this.noRotate = false;
 		this.noZoom = false;
@@ -211,12 +213,72 @@ class CustomTrackballControls extends EventDispatcher<CustomTrackballControlsEve
 			this.object.up.applyQuaternion(quaternion);
 			this._lastAxis.copy(axis);
 			this._lastAngle = angle;
+
+			// Gradually align camera.up to the closest Z-axis direction (positive or negative)
+			if (this.zAlignSpeed > 0) {
+				const currentUp = this.object.up.clone().normalize();
+				const zAxisPositive = new Vector3(0, 0, 1);
+				const zAxisNegative = new Vector3(0, 0, -1);
+
+				// Determine which Z direction is closer
+				const dotPositive = currentUp.dot(zAxisPositive);
+				const dotNegative = currentUp.dot(zAxisNegative);
+				const targetZAxis = dotPositive > dotNegative ? zAxisPositive : zAxisNegative;
+
+				// Calculate the rotation angle around the eye direction
+				const eyeDir = this._eye.clone().normalize();
+				const currentUpProjected = currentUp.clone().sub(eyeDir.clone().multiplyScalar(currentUp.dot(eyeDir))).normalize();
+				const targetZAxisProjected = targetZAxis.clone().sub(eyeDir.clone().multiplyScalar(targetZAxis.dot(eyeDir))).normalize();
+
+				// Calculate angle between projected vectors
+				const rollAngle = Math.acos(Math.max(-1, Math.min(1, currentUpProjected.dot(targetZAxisProjected))));
+
+				// Determine rotation direction using cross product
+				const rollCross = new Vector3().crossVectors(currentUpProjected, targetZAxisProjected);
+				const rollDirection = rollCross.dot(eyeDir) >= 0 ? 1 : -1;
+
+				// Apply the roll rotation around the eye axis with speed factor
+				if (rollAngle > 0.001) { // Small threshold to avoid unnecessary rotations
+					const rollQuaternion = new Quaternion();
+					// Apply only a fraction of the angle based on zAlignSpeed
+					const gradualRollAngle = rollAngle * rollDirection * this.zAlignSpeed;
+					rollQuaternion.setFromAxisAngle(eyeDir, gradualRollAngle);
+					this.object.up.applyQuaternion(rollQuaternion);
+				}
+			}
 		} else if (!this.staticMoving && this._lastAngle) {
 			this._lastAngle *= Math.sqrt(1.0 - this.dynamicDampingFactor);
 			this._eye.copy(this.object.position).sub(this.target);
 			quaternion.setFromAxisAngle(this._lastAxis, this._lastAngle);
 			this._eye.applyQuaternion(quaternion);
 			this.object.up.applyQuaternion(quaternion);
+
+			// Continue gradual Z-axis alignment during inertial rotation
+			if (this.zAlignSpeed > 0) {
+				const currentUp = this.object.up.clone().normalize();
+				const zAxisPositive = new Vector3(0, 0, 1);
+				const zAxisNegative = new Vector3(0, 0, -1);
+
+				const dotPositive = currentUp.dot(zAxisPositive);
+				const dotNegative = currentUp.dot(zAxisNegative);
+				const targetZAxis = dotPositive > dotNegative ? zAxisPositive : zAxisNegative;
+
+				const eyeDir = this._eye.clone().normalize();
+				const currentUpProjected = currentUp.clone().sub(eyeDir.clone().multiplyScalar(currentUp.dot(eyeDir))).normalize();
+				const targetZAxisProjected = targetZAxis.clone().sub(eyeDir.clone().multiplyScalar(targetZAxis.dot(eyeDir))).normalize();
+
+				const rollAngle = Math.acos(Math.max(-1, Math.min(1, currentUpProjected.dot(targetZAxisProjected))));
+
+				const rollCross = new Vector3().crossVectors(currentUpProjected, targetZAxisProjected);
+				const rollDirection = rollCross.dot(eyeDir) >= 0 ? 1 : -1;
+
+				if (rollAngle > 0.001) {
+					const rollQuaternion = new Quaternion();
+					const gradualRollAngle = rollAngle * rollDirection * this.zAlignSpeed;
+					rollQuaternion.setFromAxisAngle(eyeDir, gradualRollAngle);
+					this.object.up.applyQuaternion(rollQuaternion);
+				}
+			}
 		}
 		this._movePrev.copy(this._moveCurr);
 	};
