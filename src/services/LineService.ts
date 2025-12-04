@@ -20,6 +20,10 @@ export class LineService {
         const geometry = new THREE.BufferGeometry()
             .setFromPoints([start.sub(center), end.sub(center)]);
         const line = new THREE.Line(geometry, material);
+        const lineCenter = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
+        line.name = 'Line' + '(' + lineCenter.x.toFixed(2) + ','
+            + lineCenter.y.toFixed(2)
+            + ',' + lineCenter.z.toFixed(2) + ')';
 
         this.linesParent.add(line);
         this.lines.push(line);
