@@ -1,14 +1,13 @@
 import * as THREE from 'three';
-import {OrthographicCamera} from 'three';
+import {OrthographicCamera, Vector3} from 'three';
 import {DrawService} from "./DrawService.ts";
 import {LineService} from "./LineService.ts";
-import {TrackballControls} from 'three/addons/controls/TrackballControls.js';
-import type {IGeometry} from "../entities/IGeometry.ts";
+import { CustomTrackballControls } from '../controls/CustomTrackballControls.ts';
 
 export class SceneService {
     private readonly scene!: THREE.Scene;
     private readonly camera!: THREE.OrthographicCamera;
-    private readonly cameraControls!: TrackballControls;
+    private readonly cameraControls!: CustomTrackballControls;
 
     private renderer!: THREE.WebGLRenderer;
     private frustumSize = 40;
@@ -26,7 +25,7 @@ export class SceneService {
         this.camera = this.createCamera();
         this.renderer = this.createRenderer();
         this.cameraControls = this.createCameraControls(this.camera);
-        this.updateSceneForGeometry(new StartGeometry());
+        this.updateSceneForGeometry();
 
 
         this.setupEventListeners();
@@ -42,8 +41,8 @@ export class SceneService {
         animate();
     }
 
-    public updateSceneForGeometry(geometry: IGeometry) {
-        let center = geometry.getCenter();
+    public updateSceneForGeometry(/*geometry: IGeometry*/) {
+        let center = new Vector3();
 
         this.camera.position.set(center.x, -50, center.z + 20);
 
@@ -85,14 +84,14 @@ export class SceneService {
     }
 
     private createCameraControls(camera: OrthographicCamera) {
-        const cameraControls = new TrackballControls(camera, this.renderer.domElement);
+        const cameraControls = new CustomTrackballControls(camera, this.renderer.domElement);
 
         cameraControls.staticMoving = true;
 
         cameraControls.keys = ['ControlLeft', '', ''];
         cameraControls.mouseButtons = {
             MIDDLE: THREE.MOUSE.PAN,
-            LEFT: null,
+            LEFT: THREE.MOUSE.ROTATE,
             RIGHT: THREE.MOUSE.ROTATE
         };
         cameraControls.panSpeed = 3;
@@ -138,11 +137,5 @@ export class SceneService {
 
     getDrawService() {
         return new DrawService(new LineService(this.scene));
-    }
-}
-
-class StartGeometry implements IGeometry {
-    getCenter(): THREE.Vector3 {
-        return new THREE.Vector3(0, 0, 0);
     }
 }
