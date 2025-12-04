@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {Vector3} from "three";
+import {Vector3} from 'three';
 
 export class LineService {
     private lines: THREE.Line[] = [];
@@ -13,8 +13,10 @@ export class LineService {
         this.scene.add(this.linesParent);
     }
 
-    drawLine(start: THREE.Vector3, end: THREE.Vector3, center: THREE.Vector3, options?: { color?: THREE.Color | number }): THREE.Line {
-        const material = new THREE.LineBasicMaterial({ color: options?.color ?? 0x0000ff });
+    drawLine(start: THREE.Vector3, end: THREE.Vector3, center: THREE.Vector3, options?: {
+        color?: THREE.Color | number
+    }): THREE.Line {
+        const material = new THREE.LineBasicMaterial({color: options?.color ?? 0x0000ff});
         const geometry = new THREE.BufferGeometry()
             .setFromPoints([start.sub(center), end.sub(center)]);
         const line = new THREE.Line(geometry, material);
@@ -38,7 +40,11 @@ export class LineService {
         this.linesParent.position.copy(new Vector3());
     }
 
-    setLineParentPosition(position : THREE.Vector3) {
+    setLineParentPosition(position: THREE.Vector3) {
         this.linesParent.position.copy(position);
+    }
+
+    getLineParent() {
+        return this.linesParent;
     }
 }

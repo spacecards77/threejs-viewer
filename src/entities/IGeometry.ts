@@ -1,6 +1,8 @@
 import * as THREE from 'three';
+import {Object3D} from 'three';
 
 export interface IGeometry {
-  getCenter(): THREE.Vector3;
+    Model: Object3D | null;
+    getCenter(): THREE.Vector3;
 }
 

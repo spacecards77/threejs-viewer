@@ -1,8 +1,8 @@
 import * as THREE from 'three';
-import {Vector3} from 'three';
 import {Member} from './Member';
 import {Node} from './Node';
 import type {IGeometry} from './IGeometry';
+import type {Object3D, Vector3} from "three";
 
 export interface GeometryJSON {
     //ARCHITECTURE: use type
@@ -15,6 +15,7 @@ export class Geometry implements IGeometry {
     public readonly members: Member[];
     public readonly nodes: Node[];
     private center!: Vector3;
+    Model: Object3D | null = null;
 
     constructor(members: Member[], nodes: Node[]) {
         this.members = members;

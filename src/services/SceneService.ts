@@ -2,12 +2,12 @@ import * as THREE from 'three';
 import {OrthographicCamera, Vector3} from 'three';
 import {DrawService} from "./DrawService.ts";
 import {LineService} from "./LineService.ts";
-import { CustomTrackballControls } from '../controls/CustomTrackballControls.ts';
-
+import type {IGeometry} from "../entities/IGeometry.ts";
+import {ModelViewer} from "../controls/ModelViewer.ts";
 export class SceneService {
     private readonly scene!: THREE.Scene;
-    private readonly camera!: THREE.OrthographicCamera;
-    private readonly cameraControls!: CustomTrackballControls;
+    private readonly camera!: OrthographicCamera;
+    //private readonly cameraControls!: CustomTrackballControls;
 
     private renderer!: THREE.WebGLRenderer;
     private frustumSize = 40;
@@ -24,8 +24,7 @@ export class SceneService {
         this.scene = this.createScene();
         this.camera = this.createCamera();
         this.renderer = this.createRenderer();
-        this.cameraControls = this.createCameraControls(this.camera);
-        this.updateSceneForGeometry();
+        //this.cameraControls = this.createCameraControls(this.camera);
 
 
         this.setupEventListeners();
@@ -33,7 +32,7 @@ export class SceneService {
         const animate = () => {
             requestAnimationFrame(animate);
 
-            this.cameraControls.update();
+            //this.cameraControls.update();
 
             this.render();
         };
@@ -41,12 +40,16 @@ export class SceneService {
         animate();
     }
 
-    public updateSceneForGeometry(/*geometry: IGeometry*/) {
+    public updateSceneForGeometry(geometry: IGeometry) {
         let center = new Vector3();
 
-        this.camera.position.set(center.x, -50, center.z - 20);
+        this.camera.position.set(center.x, center.y, center.z + 20);
+        
+        if (geometry?.Model) {
+            new ModelViewer(geometry.Model, this.renderer.domElement, this.camera);
+        }
 
-        this.cameraControls.target = center;
+        //this.cameraControls.target = center;
     }
 
     private updateSizeForContainer(): void {
@@ -68,10 +71,10 @@ export class SceneService {
         return scene;
     }
 
-    private createCamera(): THREE.OrthographicCamera {
+    private createCamera(): OrthographicCamera {
         const aspect = this.width / this.height;
 
-        const camera = new THREE.OrthographicCamera(
+        const camera = new OrthographicCamera(
             this.frustumSize * aspect / -2,  // left
             this.frustumSize * aspect / 2,   // right
             this.frustumSize / 2,            // top
@@ -83,7 +86,7 @@ export class SceneService {
         return camera;
     }
 
-    private createCameraControls(camera: OrthographicCamera) {
+    /*private createCameraControls(camera: OrthographicCamera) {
         const cameraControls = new CustomTrackballControls(camera, this.renderer.domElement);
 
         cameraControls.staticMoving = true;
@@ -97,7 +100,7 @@ export class SceneService {
         cameraControls.panSpeed = 3;
 
         return cameraControls;
-    }
+    }*/
 
     /*private updateRendererPixelRatioAndSize(): void {
         if (!this.renderer) return;
@@ -125,7 +128,7 @@ export class SceneService {
             this.camera.top = this.frustumSize / 2;
             this.camera.bottom = this.frustumSize / -2;
             this.camera.updateProjectionMatrix();
-            this.cameraControls.handleResize();
+            //this.cameraControls.handleResize();
 
             this.renderer.setSize(this.width, this.height);
         });

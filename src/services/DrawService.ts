@@ -29,6 +29,8 @@ export class DrawService {
 
         //this.lineService.setLineParentPosition(center);
         //console.log(`Model displayed: ${geom.members.length} members drawn`);
+
+        construction.geometry.Model = this.lineService.getLineParent();
     }
 }
 
