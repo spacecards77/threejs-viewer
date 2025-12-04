@@ -27,7 +27,8 @@ export class DrawService {
             this.lineService.drawLine(p1, p2, center, { color: 0x99CCCC});
         }
 
-        console.log(`Model displayed: ${geom.members.length} members drawn`);
+        //this.lineService.setLineParentPosition(center);
+        //console.log(`Model displayed: ${geom.members.length} members drawn`);
     }
 }
 
