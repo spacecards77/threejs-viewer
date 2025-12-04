@@ -24,13 +24,22 @@ export class SceneService {
 
         this.scene = this.createScene();
         this.camera = this.createCamera();
+        this.renderer = this.createRenderer();
         this.cameraControls = this.createCameraControls(this.camera);
         this.updateSceneForGeometry(new StartGeometry());
 
-        this.renderer = this.createRenderer();
 
         this.setupEventListeners();
-        this.startRendering();
+
+        const animate = () => {
+            requestAnimationFrame(animate);
+
+            this.cameraControls.update();
+
+            this.render();
+        };
+
+        animate();
     }
 
     public updateSceneForGeometry(geometry: IGeometry) {
@@ -76,7 +85,7 @@ export class SceneService {
     }
 
     private createCameraControls(camera: OrthographicCamera) {
-        const cameraControls = new TrackballControls(camera, this.canvasContainer);
+        const cameraControls = new TrackballControls(camera, this.renderer.domElement);
         cameraControls.keys = ['ControlLeft', '', ''];
         cameraControls.mouseButtons = {
             MIDDLE: THREE.MOUSE.PAN,
@@ -88,18 +97,17 @@ export class SceneService {
         return cameraControls;
     }
 
-    private updateRendererPixelRatioAndSize(): void {
+    /*private updateRendererPixelRatioAndSize(): void {
         if (!this.renderer) return;
         // cap devicePixelRatio for performance (2 is a reasonable default cap)
         const capped = Math.min(window.devicePixelRatio || 1, 2);
         this.renderer.setPixelRatio(capped);
         this.renderer.setSize(this.width, this.height);
-    }
+    }*/
 
     private createRenderer(): THREE.WebGLRenderer {
         const renderer = new THREE.WebGLRenderer({antialias: true});
-        this.renderer = renderer;
-        this.updateRendererPixelRatioAndSize();
+        renderer.setSize(this.width, this.height);
         this.canvasContainer!.appendChild(renderer.domElement);
         return renderer;
     }
@@ -117,17 +125,12 @@ export class SceneService {
             this.camera.updateProjectionMatrix();
             this.cameraControls.handleResize();
 
-            this.updateRendererPixelRatioAndSize();
+            this.renderer.setSize(this.width, this.height);
         });
     }
 
-    private renderAll = () => {
-        this.cameraControls.update();
+    private render() {
         this.renderer.render(this.scene, this.camera);
-    }
-
-    private startRendering(): void {
-        this.renderer.setAnimationLoop(this.renderAll);
     }
 
     getDrawService() {
