@@ -11,6 +11,8 @@ export class DrawService {
     drawConstruction(construction: Construction) {
         this.lineService.clearAllLines();
 
+        const center = construction.geometry.getCenter();
+
         const geom = construction.geometry;
         for (const m of geom.members) {
             const n1 = geom.idToNode.get(m.node1Id);
@@ -22,7 +24,7 @@ export class DrawService {
             }
             const p1 = new THREE.Vector3(n1.x, n1.y, n1.z);
             const p2 = new THREE.Vector3(n2.x, n2.y, n2.z);
-            this.lineService.drawLine(p1, p2, { color: 0x99CCCC});
+            this.lineService.drawLine(p1, p2, center, { color: 0x99CCCC});
         }
 
         console.log(`Model displayed: ${geom.members.length} members drawn`);
