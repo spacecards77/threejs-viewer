@@ -44,7 +44,7 @@ export class SceneService {
     public updateSceneForGeometry(/*geometry: IGeometry*/) {
         let center = new Vector3();
 
-        this.camera.position.set(center.x, -50, center.z + 20);
+        this.camera.position.set(center.x, -50, center.z - 20);
 
         this.cameraControls.target = center;
     }
