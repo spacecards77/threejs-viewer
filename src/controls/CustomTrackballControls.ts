@@ -91,7 +91,7 @@ class CustomTrackballControls extends EventDispatcher<CustomTrackballControlsEve
 		this.rotateSpeed = 1.0;
 		this.zoomSpeed = 1.2;
 		this.panSpeed = 0.3;
-		this.zAlignSpeed = 0.1; // Speed of alignment to Z-axis (0.0 - 1.0, where 1.0 is instant)
+		this.zAlignSpeed = 0.75; // Speed of alignment to Z-axis (0.0 - 1.0, where 1.0 is instant)
 		this.maxZAlignAngle = 20; // Maximum angle in degrees from XY plane where Z-alignment is active
 
 		this.noRotate = false;
@@ -201,7 +201,18 @@ class CustomTrackballControls extends EventDispatcher<CustomTrackballControlsEve
 		const angleFromXYPlane = (Math.PI / 2) - angleFromZAxis;
 		const angleInDegrees = angleFromXYPlane * (180 / Math.PI);
 
-		return Math.abs(angleInDegrees) <= this.maxZAlignAngle;
+		// Calculate angle between this.object.up and positive global Z-axis
+		const objectUp = this.object.up.clone().normalize();
+		const dotProduct = objectUp.dot(zAxis);
+		const angleUpToZ = Math.acos(Math.max(-1, Math.min(1, dotProduct)));
+		const angleUpToZDegrees = angleUpToZ * (180 / Math.PI);
+		//console.log(angleInDegrees + ' ' + angleUpToZDegrees);
+
+        let result = Math.abs(angleInDegrees) <= this.maxZAlignAngle
+            && angleUpToZDegrees > 100 - this.maxZAlignAngle / 2 && angleUpToZDegrees < 100 + this.maxZAlignAngle / 2;
+        //console.log(result);
+
+        return result;
 	};
 
 	private rotateCamera = () => {
