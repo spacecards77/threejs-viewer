@@ -12,6 +12,7 @@ export class DrawService {
         this.lineService.clearAllLines();
 
         const center = construction.geometry.getCenter();
+        this.lineService.setLineParentPosition(center);
 
         const geom = construction.geometry;
         for (const m of geom.members) {
@@ -27,7 +28,6 @@ export class DrawService {
             this.lineService.drawLine(p1, p2, center, { color: 0x99CCCC});
         }
 
-        //this.lineService.setLineParentPosition(center);
         //console.log(`Model displayed: ${geom.members.length} members drawn`);
 
         construction.geometry.Model = this.lineService.getLineParent();

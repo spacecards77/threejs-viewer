@@ -82,7 +82,7 @@ export class ModelViewer {
         // Rotate around global Y axis based on horizontal mouse movement
         if (deltaX !== 0) {
             const rotationAngleY = deltaX * this.rotationSpeed;
-            this.rotateAroundWorldAxis(this.object, new Vector3(0, 0, 1), rotationAngleY, objectWorldPosition);
+            this.rotateAroundWorldAxis(this.object, new Vector3(0, 0, -1), rotationAngleY, objectWorldPosition);
         }
 
         // Rotate around perpendicular axis based on vertical mouse movement

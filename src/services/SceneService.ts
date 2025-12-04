@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {OrthographicCamera, Vector3} from 'three';
+import {OrthographicCamera} from 'three';
 import {DrawService} from "./DrawService.ts";
 import {LineService} from "./LineService.ts";
 import type {IGeometry} from "../entities/IGeometry.ts";
@@ -41,10 +41,12 @@ export class SceneService {
     }
 
     public updateSceneForGeometry(geometry: IGeometry) {
-        let center = new Vector3();
+        let center = geometry.getCenter();
 
-        this.camera.position.set(center.x, center.y, center.z + 20);
-        
+        this.camera.position.set(center.x, center.y + 50, center.z - 10);
+        this.camera.up = new THREE.Vector3(0, 0, -1);
+        this.camera.lookAt(center);
+
         if (geometry?.Model) {
             new ModelViewer(geometry.Model, this.renderer.domElement, this.camera);
         }
