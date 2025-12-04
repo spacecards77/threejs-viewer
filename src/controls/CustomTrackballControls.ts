@@ -32,6 +32,7 @@ class CustomTrackballControls extends EventDispatcher<CustomTrackballControlsEve
 	zoomSpeed: number;
 	panSpeed: number;
 	zAlignSpeed: number;
+	maxZAlignAngle: number;
 
 	noRotate: boolean;
 	noZoom: boolean;
@@ -91,6 +92,7 @@ class CustomTrackballControls extends EventDispatcher<CustomTrackballControlsEve
 		this.zoomSpeed = 1.2;
 		this.panSpeed = 0.3;
 		this.zAlignSpeed = 0.1; // Speed of alignment to Z-axis (0.0 - 1.0, where 1.0 is instant)
+		this.maxZAlignAngle = 20; // Maximum angle in degrees from XY plane where Z-alignment is active
 
 		this.noRotate = false;
 		this.noZoom = false;
@@ -187,6 +189,21 @@ class CustomTrackballControls extends EventDispatcher<CustomTrackballControlsEve
 		);
 	};
 
+	private shouldApplyZAlignment = (): boolean => {
+		if (this.zAlignSpeed <= 0) return false;
+
+		// Calculate the angle between eye direction and XY plane
+		const eyeDir = this._eye.clone().normalize();
+		const zAxis = new Vector3(0, 0, 1);
+
+		// The angle from XY plane is 90° - angle between eye and Z axis
+		const angleFromZAxis = Math.acos(Math.max(-1, Math.min(1, Math.abs(eyeDir.dot(zAxis)))));
+		const angleFromXYPlane = (Math.PI / 2) - angleFromZAxis;
+		const angleInDegrees = angleFromXYPlane * (180 / Math.PI);
+
+		return Math.abs(angleInDegrees) <= this.maxZAlignAngle;
+	};
+
 	private rotateCamera = () => {
 		const axis = new Vector3();
 		const quaternion = new Quaternion();
@@ -215,7 +232,8 @@ class CustomTrackballControls extends EventDispatcher<CustomTrackballControlsEve
 			this._lastAngle = angle;
 
 			// Gradually align camera.up to the closest Z-axis direction (positive or negative)
-			if (this.zAlignSpeed > 0) {
+			// Only apply when camera angle from XY plane is within maxZAlignAngle
+			if (this.shouldApplyZAlignment()) {
 				const currentUp = this.object.up.clone().normalize();
 				const zAxisPositive = new Vector3(0, 0, 1);
 				const zAxisNegative = new Vector3(0, 0, -1);
@@ -254,7 +272,8 @@ class CustomTrackballControls extends EventDispatcher<CustomTrackballControlsEve
 			this.object.up.applyQuaternion(quaternion);
 
 			// Continue gradual Z-axis alignment during inertial rotation
-			if (this.zAlignSpeed > 0) {
+			// Only apply when camera angle from XY plane is within maxZAlignAngle
+			if (this.shouldApplyZAlignment()) {
 				const currentUp = this.object.up.clone().normalize();
 				const zAxisPositive = new Vector3(0, 0, 1);
 				const zAxisNegative = new Vector3(0, 0, -1);
