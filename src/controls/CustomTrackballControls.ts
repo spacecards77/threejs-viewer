@@ -265,12 +265,12 @@ class CustomTrackballControls extends EventDispatcher<CustomTrackballControlsEve
 
 		mouseChange.copy(this._panEnd).sub(this._panStart);
 		if (mouseChange.lengthSq()) {
-			if ((this.object as OrthographicCamera).isOrthographicCamera) {
+			/*if ((this.object as OrthographicCamera).isOrthographicCamera) {
 				const scale_x = ((this.object as OrthographicCamera).right - (this.object as OrthographicCamera).left) / (this.object as OrthographicCamera).zoom / this.domElement.clientWidth;
 				const scale_y = ((this.object as OrthographicCamera).top - (this.object as OrthographicCamera).bottom) / (this.object as OrthographicCamera).zoom / this.domElement.clientHeight;
 				mouseChange.x *= scale_x;
 				mouseChange.y *= scale_y;
-			}
+			}*/
 			mouseChange.multiplyScalar(this._eye.length() * this.panSpeed);
 			pan.copy(this._eye).cross(this.object.up).setLength(mouseChange.x);
 			pan.add(objectUp.copy(this.object.up).setLength(mouseChange.y));
