@@ -86,6 +86,9 @@ export class SceneService {
 
     private createCameraControls(camera: OrthographicCamera) {
         const cameraControls = new TrackballControls(camera, this.renderer.domElement);
+
+        cameraControls.staticMoving = true;
+
         cameraControls.keys = ['ControlLeft', '', ''];
         cameraControls.mouseButtons = {
             MIDDLE: THREE.MOUSE.PAN,
