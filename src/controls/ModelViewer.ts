@@ -1,14 +1,16 @@
 import * as THREE from 'three';
-import { Object3D, Vector3 } from 'three';
+import {Object3D, Vector3} from 'three';
 
 export class ModelViewer {
     private object: Object3D;
     private domElement: HTMLElement;
     private camera: THREE.Camera;
-    private rotationSpeed: number = 0.005;
+    private rotationSpeed: number = 0.002;
 
     private isMouseDown: boolean = false;
-    private previousMousePosition = { x: 0, y: 0 };
+    private previousMousePosition = {x: 0, y: 0};
+
+    public desiredUp: Vector3 = new Vector3(0, 0, -1);
 
     constructor(object: Object3D, domElement: HTMLElement, camera: THREE.Camera) {
         this.object = object;
@@ -57,6 +59,13 @@ export class ModelViewer {
         const deltaY = event.clientY - this.previousMousePosition.y;
 
         this.rotateObject(deltaX, deltaY);
+
+        if (Math.abs(this.object.rotation.x) < Math.PI / 20
+            && Math.abs(this.object.rotation.y) < Math.PI / 20
+            && Math.abs(this.object.rotation.z) < Math.PI / 20
+        ) {
+            this.alignObjectUpVector();
+        }
 
         this.previousMousePosition = {
             x: event.clientX,
@@ -147,6 +156,57 @@ export class ModelViewer {
 
         // Apply the rotation to the object's orientation
         object.quaternion.multiplyQuaternions(quaternion, object.quaternion);
+    }
+
+    private alignObjectUpVector(): void {
+        // Get world positions
+        const cameraWorldPosition = new Vector3();
+        this.camera.getWorldPosition(cameraWorldPosition);
+
+        const objectWorldPosition = new Vector3();
+        this.object.getWorldPosition(objectWorldPosition);
+
+        // Calculate the axis from object to camera (rotation axis)
+        const objectToCamera = new Vector3().subVectors(cameraWorldPosition, objectWorldPosition);
+        const distance = objectToCamera.length();
+
+        if (distance < 0.001) return; // Camera too close to object
+
+        objectToCamera.normalize();
+
+        // Get object's current up vector in world space
+        const currentObjectUp = this.desiredUp.clone();
+        currentObjectUp.applyQuaternion(this.object.quaternion);
+        currentObjectUp.normalize();
+
+        // Project both up vectors onto the plane perpendicular to objectToCamera
+        const projectedCurrentUp = currentObjectUp.clone().sub(
+            objectToCamera.clone().multiplyScalar(currentObjectUp.dot(objectToCamera))
+        ).normalize();
+
+        const projectedDesiredUp = this.desiredUp.clone().sub(
+            objectToCamera.clone().multiplyScalar(this.desiredUp.dot(objectToCamera))
+        ).normalize();
+
+        // Check if projections are valid
+        if (projectedCurrentUp.length() < 0.001 || projectedDesiredUp.length() < 0.001) {
+            return; // Up vectors are parallel to the view axis
+        }
+
+        // Calculate the angle between projected up vectors
+        const cosAngle = THREE.MathUtils.clamp(projectedCurrentUp.dot(projectedDesiredUp), -1, 1);
+        const angle = Math.acos(cosAngle);
+
+        // Determine rotation direction using cross product
+        const cross = new Vector3().crossVectors(projectedCurrentUp, projectedDesiredUp);
+        const sign = Math.sign(cross.dot(objectToCamera));
+
+        // Create rotation quaternion around the objectToCamera axis
+        const rotationQuaternion = new THREE.Quaternion();
+        rotationQuaternion.setFromAxisAngle(objectToCamera, angle * sign);
+
+        // Apply the rotation to the object's orientation
+        this.object.quaternion.multiplyQuaternions(rotationQuaternion, this.object.quaternion);
     }
 
     /**
