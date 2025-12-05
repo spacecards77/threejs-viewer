@@ -11,6 +11,8 @@ export class ModelViewer {
     private previousMousePosition = {x: 0, y: 0};
 
     public desiredUp: Vector3 = new Vector3(0, 0, -1);
+    public maxAngleToStartAlign: number = Math.PI / 10;
+    public maxAlignAngle: number = Math.PI / 500;
 
     constructor(object: Object3D, domElement: HTMLElement, camera: THREE.Camera) {
         this.object = object;
@@ -60,12 +62,7 @@ export class ModelViewer {
 
         this.rotateObject(deltaX, deltaY);
 
-        if (Math.abs(this.object.rotation.x) < Math.PI / 20
-            && Math.abs(this.object.rotation.y) < Math.PI / 20
-            && Math.abs(this.object.rotation.z) < Math.PI / 20
-        ) {
-            this.alignObjectUpVector();
-        }
+        this.alignObjectUpVector();
 
         this.previousMousePosition = {
             x: event.clientX,
@@ -179,6 +176,13 @@ export class ModelViewer {
         currentObjectUp.applyQuaternion(this.object.quaternion);
         currentObjectUp.normalize();
 
+        // Calculate angle between current up and desired up
+        const cosTheta = THREE.MathUtils.clamp(currentObjectUp.dot(this.desiredUp), -1, 1);
+        const angleBetweenUps = Math.acos(cosTheta);
+        if (angleBetweenUps > this.maxAngleToStartAlign) {
+            return;
+        }
+
         // Project both up vectors onto the plane perpendicular to objectToCamera
         const projectedCurrentUp = currentObjectUp.clone().sub(
             objectToCamera.clone().multiplyScalar(currentObjectUp.dot(objectToCamera))
@@ -195,7 +199,7 @@ export class ModelViewer {
 
         // Calculate the angle between projected up vectors
         const cosAngle = THREE.MathUtils.clamp(projectedCurrentUp.dot(projectedDesiredUp), -1, 1);
-        const angle = Math.acos(cosAngle);
+        const angle = Math.min(this.maxAlignAngle, Math.acos(cosAngle));
 
         // Determine rotation direction using cross product
         const cross = new Vector3().crossVectors(projectedCurrentUp, projectedDesiredUp);
