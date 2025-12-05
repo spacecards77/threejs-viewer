@@ -1,18 +1,50 @@
 import * as THREE from 'three';
-import {Object3D, Vector3} from 'three';
+import {Object3D, Vector3, Vector2, MOUSE} from 'three';
+
+const STATE = { NONE: -1, ROTATE: 0, ZOOM: 1, PAN: 2 };
 
 export class ModelViewer {
     private object: Object3D;
     private domElement: HTMLElement;
     private camera: THREE.Camera;
-    private rotationSpeed: number = 0.002;
 
-    private isMouseDown: boolean = false;
+    // Speeds
+    private rotationSpeed: number = 0.002;
+    public zoomSpeed: number = 0.001;
+    public panSpeed: number = 0.5;
+
+    // State management
+    private state: number = STATE.NONE;
+    private keyState: number = STATE.NONE;
     private previousMousePosition = {x: 0, y: 0};
 
+    // Mouse button configuration
+    public mouseButtons: { LEFT: MOUSE; MIDDLE: MOUSE; RIGHT: MOUSE; } = {
+        LEFT: MOUSE.ROTATE,
+        MIDDLE: MOUSE.PAN,
+        RIGHT: MOUSE.PAN
+    };
+
+    // Keyboard configuration (keys for ROTATE, ZOOM, PAN)
+    public keys: string[] = ['ControlLeft;ControlRight', '', ''];
+
+    // Disable flags
+    public noRotate: boolean = false;
+    public noZoom: boolean = false;
+    public noPan: boolean = false;
+
+    // Alignment settings
     public desiredUp: Vector3 = new Vector3(0, 0, -1);
     public maxAngleToStartAlign: number = Math.PI / 10;
     public maxAlignAngle: number = Math.PI / 500;
+
+    // Zoom state
+    private zoomStart: Vector2 = new Vector2();
+    private zoomEnd: Vector2 = new Vector2();
+
+    // Pan state
+    private panStart: Vector2 = new Vector2();
+    private panEnd: Vector2 = new Vector2();
 
     constructor(object: Object3D, domElement: HTMLElement, camera: THREE.Camera) {
         this.object = object;
@@ -42,27 +74,61 @@ export class ModelViewer {
         this.domElement.addEventListener('mousemove', this.onMouseMove.bind(this));
         this.domElement.addEventListener('mouseup', this.onMouseUp.bind(this));
         this.domElement.addEventListener('mouseleave', this.onMouseLeave.bind(this));
+        window.addEventListener('keydown', this.onKeyDown.bind(this));
+        window.addEventListener('keyup', this.onKeyUp.bind(this));
     }
 
     private onMouseDown(event: MouseEvent): void {
-        if (event.button === 0) { // Left mouse button
-            this.isMouseDown = true;
-            this.previousMousePosition = {
-                x: event.clientX,
-                y: event.clientY
-            };
+        // Determine action from mouse button configuration
+        let mouseAction;
+        switch (event.button) {
+            case 0:
+                mouseAction = this.mouseButtons.LEFT;
+                break;
+            case 1:
+                mouseAction = this.mouseButtons.MIDDLE;
+                break;
+            case 2:
+                mouseAction = this.mouseButtons.RIGHT;
+                break;
+            default:
+                mouseAction = -1;
         }
-    }
 
-    private onMouseMove(event: MouseEvent): void {
-        if (!this.isMouseDown) return;
+        // Set state based on mouse button
+        switch (mouseAction) {
+            case MOUSE.DOLLY:
+                if (!this.noZoom) {
+                    this.state = STATE.ZOOM;
+                }
+                break;
+            case MOUSE.ROTATE:
+                if (!this.noRotate) {
+                    this.state = STATE.ROTATE;
+                }
+                break;
+            case MOUSE.PAN:
+                if (!this.noPan) {
+                    this.state = STATE.PAN;
+                }
+                break;
+            default:
+                this.state = STATE.NONE;
+        }
 
-        const deltaX = event.clientX - this.previousMousePosition.x;
-        const deltaY = event.clientY - this.previousMousePosition.y;
+        // Compute effective state: keyState overrides state
+        const effectiveState = (this.keyState !== STATE.NONE) ? this.keyState : this.state;
 
-        this.rotateObject(deltaX, deltaY);
-
-        this.alignObjectUpVector();
+        // Initialize state-specific values based on effective state
+        if (effectiveState === STATE.ROTATE && !this.noRotate) {
+            // Rotation initialization if needed
+        } else if (effectiveState === STATE.ZOOM && !this.noZoom) {
+            this.zoomStart.set(event.clientX, event.clientY);
+            this.zoomEnd.copy(this.zoomStart);
+        } else if (effectiveState === STATE.PAN && !this.noPan) {
+            this.panStart.set(event.clientX, event.clientY);
+            this.panEnd.copy(this.panStart);
+        }
 
         this.previousMousePosition = {
             x: event.clientX,
@@ -70,14 +136,76 @@ export class ModelViewer {
         };
     }
 
-    private onMouseUp(event: MouseEvent): void {
-        if (event.button === 0) { // Left mouse button
-            this.isMouseDown = false;
+    private onMouseMove(event: MouseEvent): void {
+        if (this.state === STATE.NONE) return;
+
+        const deltaX = event.clientX - this.previousMousePosition.x;
+        const deltaY = event.clientY - this.previousMousePosition.y;
+
+        // Compute effective state: keyState overrides state
+        const effectiveState = (this.keyState !== STATE.NONE) ? this.keyState : this.state;
+
+        if (effectiveState === STATE.ROTATE && !this.noRotate) {
+            this.rotateObject(deltaX, deltaY);
+            this.alignObjectUpVector();
+        } else if (effectiveState === STATE.ZOOM && !this.noZoom) {
+            this.zoomEnd.set(event.clientX, event.clientY);
+            this.zoomCamera();
+        } else if (effectiveState === STATE.PAN && !this.noPan) {
+            this.panEnd.set(event.clientX, event.clientY);
+            this.panCamera();
         }
+
+        this.previousMousePosition = {
+            x: event.clientX,
+            y: event.clientY
+        };
+    }
+
+    private onMouseUp(): void {
+        this.state = STATE.NONE;
     }
 
     private onMouseLeave(): void {
-        this.isMouseDown = false;
+        this.state = STATE.NONE;
+    }
+
+    private onKeyDown(event: KeyboardEvent): void {
+        // Don't set keyState if it's already set
+        if (this.keyState !== STATE.NONE) {
+            return;
+        }
+
+        // Check which key was pressed and set corresponding state
+        if (this.isKeyMatch(event.code, this.keys[STATE.ROTATE]) && !this.noRotate) {
+            this.keyState = STATE.ROTATE;
+        } else if (this.isKeyMatch(event.code, this.keys[STATE.ZOOM]) && !this.noZoom) {
+            this.keyState = STATE.ZOOM;
+        } else if (this.isKeyMatch(event.code, this.keys[STATE.PAN]) && !this.noPan) {
+            this.keyState = STATE.PAN;
+        }
+    }
+
+    /**
+     * Check if the pressed key matches the configured key(s)
+     * Supports multiple keys separated by semicolons (e.g., 'ControlLeft;ControlRight')
+     * @param pressedKey - The key code that was pressed
+     * @param configuredKeys - The configured key(s) string, can contain multiple keys separated by ';'
+     * @returns true if the pressed key matches any of the configured keys
+     */
+    private isKeyMatch(pressedKey: string, configuredKeys: string): boolean {
+        if (!configuredKeys) {
+            return false;
+        }
+
+        // Split by semicolon and check if any key matches
+        const keys = configuredKeys.split(';').map(k => k.trim());
+        return keys.includes(pressedKey);
+    }
+
+    private onKeyUp(): void {
+        // Reset keyState when any key is released
+        this.keyState = STATE.NONE;
     }
 
     private rotateObject(deltaX: number, deltaY: number): void {
@@ -214,6 +342,72 @@ export class ModelViewer {
     }
 
     /**
+     * Zoom the camera based on mouse movement
+     */
+    private zoomCamera(): void {
+        const factor = 1.0 + (this.zoomEnd.y - this.zoomStart.y) * this.zoomSpeed;
+
+        if (factor !== 1.0 && factor > 0.0) {
+            // Get camera world position
+            const cameraWorldPosition = new Vector3();
+            this.camera.getWorldPosition(cameraWorldPosition);
+
+            // Get object world position
+            const objectWorldPosition = new Vector3();
+            this.object.getWorldPosition(objectWorldPosition);
+
+            // Calculate direction from camera to object
+            const direction = new Vector3().subVectors(objectWorldPosition, cameraWorldPosition);
+
+            // Zoom by moving camera along this direction
+            const zoomDelta = direction.multiplyScalar(1 - factor);
+            this.camera.position.add(zoomDelta);
+        }
+
+        this.zoomStart.copy(this.zoomEnd);
+    }
+
+    /**
+     * Pan the camera based on mouse movement
+     */
+    private panCamera(): void {
+        const deltaX = this.panEnd.x - this.panStart.x;
+        const deltaY = this.panEnd.y - this.panStart.y;
+
+        if (deltaX !== 0 || deltaY !== 0) {
+            // Get camera world position
+            const cameraWorldPosition = new Vector3();
+            this.camera.getWorldPosition(cameraWorldPosition);
+
+            // Get object world position
+            const objectWorldPosition = new Vector3();
+            this.object.getWorldPosition(objectWorldPosition);
+
+            // Calculate distance for scaling
+            const distance = cameraWorldPosition.distanceTo(objectWorldPosition);
+
+            // Get camera right vector (perpendicular to camera direction and up)
+            const cameraDirection = new Vector3().subVectors(objectWorldPosition, cameraWorldPosition).normalize();
+            const cameraRight = new Vector3().crossVectors(cameraDirection, this.camera.up).normalize();
+            const cameraUp = this.camera.up.clone().normalize();
+
+            // Scale pan movement by distance and panSpeed
+            const panScale = distance * this.panSpeed * 0.001;
+
+            // Calculate pan offset
+            const panOffset = new Vector3();
+            panOffset.add(cameraRight.multiplyScalar(-deltaX * panScale));
+            panOffset.add(cameraUp.multiplyScalar(deltaY * panScale));
+
+            // Apply pan to both camera and object
+            this.camera.position.add(panOffset);
+            this.object.position.add(panOffset);
+        }
+
+        this.panStart.copy(this.panEnd);
+    }
+
+    /**
      * Dispose of event listeners
      */
     public dispose(): void {
@@ -221,6 +415,8 @@ export class ModelViewer {
         this.domElement.removeEventListener('mousemove', this.onMouseMove.bind(this));
         this.domElement.removeEventListener('mouseup', this.onMouseUp.bind(this));
         this.domElement.removeEventListener('mouseleave', this.onMouseLeave.bind(this));
+        window.removeEventListener('keydown', this.onKeyDown.bind(this));
+        window.removeEventListener('keyup', this.onKeyUp.bind(this));
     }
 }
 
