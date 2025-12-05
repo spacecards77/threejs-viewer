@@ -7,6 +7,7 @@ import {config} from "../config.ts";
 
 export class LineService {
     private lines: Line2[] = [];
+    private dots: THREE.Points[] = [];
     private cones: THREE.Mesh[] = [];
     private readonly scene: THREE.Scene;
     private linesParent!: THREE.Group;
@@ -18,8 +19,42 @@ export class LineService {
         this.createLinesParent();
     }
 
-    drawLine(start: THREE.Vector3, end: THREE.Vector3,
-             options?: { color?: THREE.Color | number, linewidth?: number }
+    public drawSquare(position: THREE.Vector3,
+                      options: { color?: THREE.Color | number, size: number }
+    ) {
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute([
+                position.x - this.linesParent.position.x,
+                position.y - this.linesParent.position.y,
+                position.z - this.linesParent.position.z],
+            3));
+
+        const material = new THREE.PointsMaterial({
+            color: options.color || 0xff0000,
+            size: options.size,
+            sizeAttenuation: false, // ВАЖНО: false отключает уменьшение от дистанции
+            // --- ВАЖНЫЕ НАСТРОЙКИ ДЛЯ ОТРИСОВКИ ПОВЕРХ ВСЕГО ---
+            depthTest: false,   // Отключаем проверку глубины (рисуем сквозь стены)
+            depthWrite: false,  // Не записываем этот объект в буфер глубины (хорошая практика для UI)
+            transparent: true   // Обычно нужно, если используются текстуры, но для цветного квадрата тоже не помешает :)
+        });
+
+        const dot = new THREE.Points(geometry, material);
+
+        // чтобы объект рисовался после всех остальных объектов сцены
+        dot.renderOrder = 999;
+
+        // Если не отключить frustumCulled, объект может исчезнуть,
+        // когда его "настоящий" центр выйдет за пределы камеры,
+        // хотя сам квадрат все еще должен быть виден.
+        dot.frustumCulled = false;
+
+        this.linesParent.add(dot);
+        this.dots.push(dot);
+    }
+
+    public drawLine(start: THREE.Vector3, end: THREE.Vector3,
+                    options?: { color?: THREE.Color | number, linewidth?: number }
     ) {
         //OPTIMIZE: Reuse materials and geometries where possible
         const material = new LineMaterial({
@@ -62,7 +97,7 @@ export class LineService {
         // Create cone geometry and material
         const coneGeometry = new THREE.ConeGeometry(this.coneRadius, this.coneHeight, 16);
         const col = new Color(options?.color ?? 0x0000ff);
-        const coneMaterial = new THREE.MeshBasicMaterial({ color: col });
+        const coneMaterial = new THREE.MeshBasicMaterial({color: col});
         const cone = new THREE.Mesh(coneGeometry, coneMaterial);
 
         // Position the cone at the end point
@@ -79,7 +114,7 @@ export class LineService {
         if (config.debugMode)
             cone.name = 'ArrowCone' + '(' + end.x.toFixed(2) + ','
                 + end.y.toFixed(2)
-            + ',' + end.z.toFixed(2) + ')';
+                + ',' + end.z.toFixed(2) + ')';
 
         this.linesParent.add(cone);
         this.cones.push(cone);
@@ -107,6 +142,17 @@ export class LineService {
             this.linesParent.remove(cone);
         }
         this.cones = [];
+
+        for (const dot of this.dots) {
+            dot.geometry.dispose();
+            if (Array.isArray(dot.material)) {
+                dot.material.forEach(m => m.dispose());
+            } else {
+                dot.material.dispose();
+            }
+            this.linesParent.remove(dot);
+        }
+        this.dots = [];
 
         this.createLinesParent();
     }

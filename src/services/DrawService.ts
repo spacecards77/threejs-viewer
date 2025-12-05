@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { Construction } from '../entities';
 import { LineService } from './LineService';
 import {Vector3} from "three";
+import {config} from "../config.ts";
 
 export class DrawService {
     private lineService: LineService;
@@ -15,13 +16,13 @@ export class DrawService {
         const center = construction.geometry.getCenter();
         this.lineService.setLineParentPosition(center);
 
-        const geom = construction.geometry;
-        for (const m of geom.members) {
-            const n1 = geom.idToNode.get(m.node1Id);
-            const n2 = geom.idToNode.get(m.node2Id);
+        const geometry = construction.geometry;
+        for (const member of geometry.members) {
+            const n1 = geometry.idToNode.get(member.node1Id);
+            const n2 = geometry.idToNode.get(member.node2Id);
             if (!n1 || !n2) {
-                if (!n1) console.warn(`Invalid Node1Id for member ${m.id}: Node1Id=${m.node1Id}`);
-                if (!n2) console.warn(`Invalid Node2Id for member ${m.id}: Node2Id=${m.node2Id}`);
+                if (!n1) console.warn(`Invalid Node1Id for member ${member.id}: Node1Id=${member.node1Id}`);
+                if (!n2) console.warn(`Invalid Node2Id for member ${member.id}: Node2Id=${member.node2Id}`);
                 continue;
             }
             const p1 = new THREE.Vector3(n1.x, n1.y, n1.z);
@@ -29,8 +30,15 @@ export class DrawService {
             this.lineService.drawLine(p1, p2, { color: 0x99CCCC});
         }
 
+        for (const node of geometry.nodes) {
+            const position = new THREE.Vector3(node.x, node.y, node.z);
+            this.lineService.drawSquare(position, { color: 0xFF0000, size: 3 });
+        }
+
         this.drawArrows();
-        //console.log(`Model displayed: ${geom.members.length} members drawn`);
+
+        if (config.debugMode)
+            console.log(`Model displayed: ${geometry.members.length} members drawn`);
 
         construction.geometry.Model = this.lineService.getLineParent();
     }
