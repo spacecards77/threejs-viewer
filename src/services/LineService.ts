@@ -1,24 +1,24 @@
 import * as THREE from 'three';
-import {Vector3} from 'three';
 
 export class LineService {
     private lines: THREE.Line[] = [];
     private readonly scene: THREE.Scene;
-    private readonly linesParent: THREE.Group;
+    private linesParent!: THREE.Group;
 
     constructor(scene: THREE.Scene) {
         this.scene = scene;
-        this.linesParent = new THREE.Group();
-        this.linesParent.name = 'LinesParent';
-        this.scene.add(this.linesParent);
+        this.createLinesParent();
     }
 
     drawLine(start: THREE.Vector3, end: THREE.Vector3, center: THREE.Vector3, options?: {
         color?: THREE.Color | number
     }): THREE.Line {
         const material = new THREE.LineBasicMaterial({color: options?.color ?? 0x0000ff});
+        // avoid mutating caller-provided vectors by cloning before subtracting
+        const p1 = start.clone().sub(center);
+        const p2 = end.clone().sub(center);
         const geometry = new THREE.BufferGeometry()
-            .setFromPoints([start.sub(center), end.sub(center)]);
+            .setFromPoints([p1, p2]);
         const line = new THREE.Line(geometry, material);
         const lineCenter = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
         line.name = 'Line' + '(' + lineCenter.x.toFixed(2) + ','
@@ -41,7 +41,16 @@ export class LineService {
             this.linesParent.remove(line);
         }
         this.lines = [];
-        this.linesParent.position.copy(new Vector3());
+        this.createLinesParent();
+    }
+
+    private createLinesParent() {
+        if (this.linesParent)
+            this.scene.remove(this.linesParent);
+
+        this.linesParent = new THREE.Group();
+        this.linesParent.name = 'LinesParent';
+        this.scene.add(this.linesParent);
     }
 
     setLineParentPosition(position: THREE.Vector3) {
