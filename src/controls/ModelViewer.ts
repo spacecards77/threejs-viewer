@@ -22,7 +22,7 @@ export class ModelViewer {
     public mouseButtons: { LEFT: MOUSE; MIDDLE: MOUSE; RIGHT: MOUSE; } = {
         LEFT: MOUSE.ROTATE,
         MIDDLE: MOUSE.PAN,
-        RIGHT: MOUSE.ROTATE,
+        RIGHT: MOUSE.DOLLY,
     };
 
     // Keyboard configuration (keys for ROTATE, ZOOM, PAN)

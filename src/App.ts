@@ -18,7 +18,7 @@ export class App {
         new LoadJsonUiController(this.handleConstructionLoaded);
 
         // If configured to autoload a JSON path, try to fetch and draw it now.
-        const path = config.autoLoadJson?.trim();
+        const path = config.debugMode ? config.autoLoadJson?.trim() : '';
         if (path) {
             const auto = new AutoLoadJsonService(this.handleConstructionLoaded);
             void auto.tryAutoload(path);

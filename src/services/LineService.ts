@@ -3,6 +3,7 @@ import {Line2} from 'three/addons/lines/Line2.js';
 import {LineMaterial} from "three/addons/lines/LineMaterial.js";
 import {LineGeometry} from "three/addons/lines/LineGeometry.js";
 import {Color} from "three";
+import {config} from "../config.ts";
 
 export class LineService {
     private lines: Line2[] = [];
@@ -35,9 +36,11 @@ export class LineService {
         geometry.setColors([col.r, col.g, col.b, col.r, col.g, col.b]);
         const line = new Line2(geometry, material);
         const lineCenter = new THREE.Vector3().addVectors(start, end).multiplyScalar(0.5);
-        line.name = 'Line' + '(' + lineCenter.x.toFixed(2) + ','
-            + lineCenter.y.toFixed(2)
-            + ',' + lineCenter.z.toFixed(2) + ')';
+
+        if (config.debugMode)
+            line.name = 'Line' + '(' + lineCenter.x.toFixed(2) + ','
+                + lineCenter.y.toFixed(2)
+                + ',' + lineCenter.z.toFixed(2) + ')';
 
         this.linesParent.add(line);
         this.lines.push(line);
@@ -75,8 +78,9 @@ export class LineService {
         const quaternion = new THREE.Quaternion().setFromUnitVectors(up, direction);
         cone.setRotationFromQuaternion(quaternion);
 
-        cone.name = 'ArrowCone' + '(' + end.x.toFixed(2) + ','
-            + end.y.toFixed(2)
+        if (config.debugMode)
+            cone.name = 'ArrowCone' + '(' + end.x.toFixed(2) + ','
+                + end.y.toFixed(2)
             + ',' + end.z.toFixed(2) + ')';
 
         this.linesParent.add(cone);

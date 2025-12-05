@@ -4,6 +4,7 @@ import {DrawService} from "./DrawService.ts";
 import {LineService} from "./LineService.ts";
 import type {IGeometry} from "../entities/IGeometry.ts";
 import {ModelViewer} from "../controls/ModelViewer.ts";
+import {config} from "../config.ts";
 export class SceneService {
     private readonly scene!: THREE.Scene;
     private readonly camera!: OrthographicCamera;
@@ -67,8 +68,11 @@ export class SceneService {
     private createScene(): THREE.Scene {
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x000000);
-        const axesHelper = new THREE.AxesHelper(5);
-        scene.add(axesHelper);
+
+        if (config.debugMode) {
+            const axesHelper = new THREE.AxesHelper(5);
+            scene.add(axesHelper);
+        }
 
         return scene;
     }
