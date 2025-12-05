@@ -17,8 +17,7 @@ export class LineService {
         this.createLinesParent();
     }
 
-    //TODO: убрать параметр constructionCenter и использовать позицию linesParent
-    drawLine(start: THREE.Vector3, end: THREE.Vector3, constructionCenter: THREE.Vector3,
+    drawLine(start: THREE.Vector3, end: THREE.Vector3,
              options?: { color?: THREE.Color | number, linewidth?: number }
     ) {
         //OPTIMIZE: Reuse materials and geometries where possible
@@ -27,8 +26,8 @@ export class LineService {
             vertexColors: true,
         });
         // avoid mutating caller-provided vectors by cloning before subtracting
-        const p1 = start.clone().sub(constructionCenter);
-        const p2 = end.clone().sub(constructionCenter);
+        const p1 = start.clone().sub(this.linesParent.position);
+        const p2 = end.clone().sub(this.linesParent.position);
         const geometry = new LineGeometry().setFromPoints([p1, p2]);
         // LineGeometry.setColors expects an array of RGB float values per vertex
         // (r, g, b) for each vertex. For two vertices we must supply 6 floats.
@@ -44,7 +43,7 @@ export class LineService {
         this.lines.push(line);
     }
 
-    drawArrow(start: THREE.Vector3, end: THREE.Vector3, constructionCenter: THREE.Vector3,
+    drawArrow(start: THREE.Vector3, end: THREE.Vector3,
               options?: { color?: THREE.Color | number, linewidth?: number }
     ) {
         // Calculate total length and direction
@@ -57,7 +56,7 @@ export class LineService {
         const lineEnd = end;
 
         // Draw the line from start to lineEnd
-        this.drawLine(start, lineEnd, constructionCenter, options);
+        this.drawLine(start, lineEnd, options);
 
         // Create cone geometry and material
         const coneGeometry = new THREE.ConeGeometry(this.coneRadius, this.coneHeight, 16);
@@ -67,7 +66,7 @@ export class LineService {
 
         // Position the cone at the end point
         // Cone's default orientation is pointing up (Y+), so we need to align it with direction
-        const conePosition = end.clone().sub(constructionCenter);
+        const conePosition = end.clone().sub(this.linesParent.position);
         cone.position.copy(conePosition);
 
         // Align cone with the direction vector
