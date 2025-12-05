@@ -37,6 +37,8 @@ export class ModelViewer {
     public desiredUp: Vector3 = new Vector3(0, 0, -1);
     public maxAngleToStartAlign: number = Math.PI / 10;
     public maxAlignAngle: number = Math.PI / 500;
+    public mouseXMoveRotationAxis: Vector3 = new Vector3(0, 0, -1);
+    public mouseYMoveRotationAxis: Vector3 = new Vector3(1, 0, 0);
 
     // Zoom state
     private zoomStart: Vector2 = new Vector2();
@@ -209,37 +211,18 @@ export class ModelViewer {
     }
 
     private rotateObject(deltaX: number, deltaY: number): void {
-        // Get the object's world position
         const objectWorldPosition = new Vector3();
         this.object.getWorldPosition(objectWorldPosition);
 
-        // Rotate around global Y axis based on horizontal mouse movement
         if (deltaX !== 0) {
             const rotationAngleY = deltaX * this.rotationSpeed;
-            this.rotateAroundWorldAxis(this.object, new Vector3(0, 0, -1), rotationAngleY, objectWorldPosition);
+            this.rotateAroundWorldAxis(this.object, this.mouseXMoveRotationAxis, rotationAngleY, objectWorldPosition);
         }
 
-        // Rotate around perpendicular axis based on vertical mouse movement
         if (deltaY !== 0) {
             const rotationAngleX = deltaY * this.rotationSpeed;
 
-            // Get camera world position
-            const cameraWorldPosition = new Vector3();
-            this.camera.getWorldPosition(cameraWorldPosition);
-
-            // Calculate the vector from object to camera
-            const objectToCamera = new Vector3().subVectors(cameraWorldPosition, objectWorldPosition);
-
-            // Global Y axis
-            const globalY = new Vector3(0, 1, 0);
-
-            // Find the axis perpendicular to both objectToCamera and globalY
-            const perpendicularAxis = new Vector3().crossVectors(objectToCamera, globalY).normalize();
-
-            // Only rotate if the perpendicular axis is valid (not zero vector)
-            if (perpendicularAxis.length() > 0.001) {
-                this.rotateAroundWorldAxis(this.object, perpendicularAxis, rotationAngleX, objectWorldPosition);
-            }
+            this.rotateAroundWorldAxis(this.object, this.mouseYMoveRotationAxis, rotationAngleX, objectWorldPosition);
         }
     }
 
