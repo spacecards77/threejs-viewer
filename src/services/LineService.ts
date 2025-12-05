@@ -1,8 +1,8 @@
 import * as THREE from 'three';
+import {Color} from 'three';
 import {Line2} from 'three/addons/lines/Line2.js';
 import {LineMaterial} from "three/addons/lines/LineMaterial.js";
 import {LineGeometry} from "three/addons/lines/LineGeometry.js";
-import {Color} from "three";
 import {config} from "../config.ts";
 
 export class LineService {
@@ -56,10 +56,8 @@ export class LineService {
 
         // Calculate the new end point for the line (shortened by cone height)
         //const lineEnd = start.clone().add(direction.clone().multiplyScalar(totalLength - this.coneHeight));
-        const lineEnd = end;
-
         // Draw the line from start to lineEnd
-        this.drawLine(start, lineEnd, options);
+        this.drawLine(start, end, options);
 
         // Create cone geometry and material
         const coneGeometry = new THREE.ConeGeometry(this.coneRadius, this.coneHeight, 16);

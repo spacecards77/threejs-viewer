@@ -5,6 +5,7 @@ import {LineService} from "./LineService.ts";
 import type {IGeometry} from "../entities/IGeometry.ts";
 import {ModelViewer} from "../controls/ModelViewer.ts";
 import {config} from "../config.ts";
+
 export class SceneService {
     private readonly scene!: THREE.Scene;
     private readonly camera!: OrthographicCamera;
@@ -80,7 +81,7 @@ export class SceneService {
     private createCamera(): OrthographicCamera {
         const aspect = this.width / this.height;
 
-        const camera = new OrthographicCamera(
+        return new OrthographicCamera(
             this.frustumSize * aspect / -2,  // left
             this.frustumSize * aspect / 2,   // right
             this.frustumSize / 2,            // top
@@ -88,8 +89,6 @@ export class SceneService {
             0.1,                             // near
             1000                             // far
         );
-
-        return camera;
     }
 
     /*private createCameraControls(camera: OrthographicCamera) {
