@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {Object3D, Vector3, Vector2, MOUSE} from 'three';
+import {Object3D, Vector3, Vector2, MOUSE, PerspectiveCamera, OrthographicCamera} from 'three';
 
 const STATE = { NONE: -1, ROTATE: 0, ZOOM: 1, PAN: 2 };
 
@@ -10,7 +10,7 @@ export class ModelViewer {
 
     // Speeds
     private rotationSpeed: number = 0.002;
-    public zoomSpeed: number = 0.001;
+    public zoomSpeed: number = 0.004;
     public panSpeed: number = 0.5;
 
     // State management
@@ -22,7 +22,7 @@ export class ModelViewer {
     public mouseButtons: { LEFT: MOUSE; MIDDLE: MOUSE; RIGHT: MOUSE; } = {
         LEFT: MOUSE.ROTATE,
         MIDDLE: MOUSE.PAN,
-        RIGHT: MOUSE.PAN
+        RIGHT: MOUSE.ROTATE,
     };
 
     // Keyboard configuration (keys for ROTATE, ZOOM, PAN)
@@ -76,6 +76,7 @@ export class ModelViewer {
         this.domElement.addEventListener('mousemove', this.onMouseMove.bind(this));
         this.domElement.addEventListener('mouseup', this.onMouseUp.bind(this));
         this.domElement.addEventListener('mouseleave', this.onMouseLeave.bind(this));
+        this.domElement.addEventListener('wheel', this.onMouseWheel.bind(this), { passive: false });
         window.addEventListener('keydown', this.onKeyDown.bind(this));
         window.addEventListener('keyup', this.onKeyUp.bind(this));
     }
@@ -210,6 +211,33 @@ export class ModelViewer {
         this.keyState = STATE.NONE;
     }
 
+    private onMouseWheel(event: WheelEvent): void {
+        if (this.noZoom) return;
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        // Adjust zoom based on wheel delta mode
+        // Accumulate changes in zoomStart to create a delta from zoomEnd
+        // Using larger multipliers to compensate for the small zoomSpeed (0.001)
+        switch (event.deltaMode) {
+            case 2:
+                // Zoom in pages
+                this.zoomStart.y -= event.deltaY * 30;
+                break;
+            case 1:
+                // Zoom in lines
+                this.zoomStart.y -= event.deltaY * 12;
+                break;
+            default:
+                // undefined, 0, assume pixels
+                this.zoomStart.y -= event.deltaY * 0.3;
+                break;
+        }
+
+        this.zoomCamera();
+    }
+
     private rotateObject(deltaX: number, deltaY: number): void {
         const objectWorldPosition = new Vector3();
         this.object.getWorldPosition(objectWorldPosition);
@@ -326,28 +354,41 @@ export class ModelViewer {
 
     /**
      * Zoom the camera based on mouse movement
+     * Handles PerspectiveCamera and OrthographicCamera differently
      */
     private zoomCamera(): void {
         const factor = 1.0 + (this.zoomEnd.y - this.zoomStart.y) * this.zoomSpeed;
 
         if (factor !== 1.0 && factor > 0.0) {
-            // Get camera world position
-            const cameraWorldPosition = new Vector3();
-            this.camera.getWorldPosition(cameraWorldPosition);
+            if ((this.camera as PerspectiveCamera).isPerspectiveCamera) {
+                // For perspective camera: move camera position along eye vector
+                const cameraWorldPosition = new Vector3();
+                this.camera.getWorldPosition(cameraWorldPosition);
 
-            // Get object world position
-            const objectWorldPosition = new Vector3();
-            this.object.getWorldPosition(objectWorldPosition);
+                const objectWorldPosition = new Vector3();
+                this.object.getWorldPosition(objectWorldPosition);
 
-            // Calculate direction from camera to object
-            const direction = new Vector3().subVectors(objectWorldPosition, cameraWorldPosition);
+                // Calculate direction from camera to object
+                const direction = new Vector3().subVectors(objectWorldPosition, cameraWorldPosition);
 
-            // Zoom by moving camera along this direction
-            const zoomDelta = direction.multiplyScalar(1 - factor);
-            this.camera.position.add(zoomDelta);
+                // Zoom by moving camera along this direction
+                const zoomDelta = direction.multiplyScalar(1 - factor);
+                this.camera.position.add(zoomDelta);
+
+            } else if ((this.camera as OrthographicCamera).isOrthographicCamera) {
+                // For orthographic camera: adjust zoom property
+                const orthoCamera = this.camera as OrthographicCamera;
+                orthoCamera.zoom = orthoCamera.zoom / factor;
+                orthoCamera.updateProjectionMatrix();
+
+            } else {
+                console.warn('ModelViewer: Unsupported camera type');
+            }
+
+            // Reset the zoom delta
+            // Update zoomStart.y to match zoomEnd.y to consume the delta
+            this.zoomStart.y = this.zoomEnd.y;
         }
-
-        this.zoomStart.copy(this.zoomEnd);
     }
 
     /**
@@ -398,6 +439,7 @@ export class ModelViewer {
         this.domElement.removeEventListener('mousemove', this.onMouseMove.bind(this));
         this.domElement.removeEventListener('mouseup', this.onMouseUp.bind(this));
         this.domElement.removeEventListener('mouseleave', this.onMouseLeave.bind(this));
+        this.domElement.removeEventListener('wheel', this.onMouseWheel.bind(this));
         window.removeEventListener('keydown', this.onKeyDown.bind(this));
         window.removeEventListener('keyup', this.onKeyUp.bind(this));
     }
