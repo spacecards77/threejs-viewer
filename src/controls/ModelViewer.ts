@@ -400,8 +400,8 @@ export class ModelViewer {
             panOffset.add(cameraUp.multiplyScalar(deltaY * panScale));
 
             // Apply pan to both camera and object
-            this.camera.position.add(panOffset);
-            this.object.position.add(panOffset);
+            //this.camera.position.add(panOffset);
+            this.object.position.add(panOffset.multiplyScalar(-1));
         }
 
         this.panStart.copy(this.panEnd);
