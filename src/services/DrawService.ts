@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { Construction } from '../entities';
 import { LineService } from './LineService';
+import {Vector3} from "three";
 
 export class DrawService {
     private lineService: LineService;
@@ -28,9 +29,17 @@ export class DrawService {
             this.lineService.drawLine(p1, p2, center, { color: 0x99CCCC});
         }
 
+        this.drawArrows(center);
         //console.log(`Model displayed: ${geom.members.length} members drawn`);
 
         construction.geometry.Model = this.lineService.getLineParent();
+    }
+
+    private drawArrows(constructionCenter: Vector3) {
+        const length = 1;
+        this.lineService.drawArrow(new Vector3(), new Vector3(length, 0, 0), constructionCenter, {color: 0xBA0000}); // X - Red
+        this.lineService.drawArrow(new Vector3(), new Vector3(0, length, 0), constructionCenter, {color: 0x00C500}); // Y - Green
+        this.lineService.drawArrow(new Vector3(), new Vector3(0, 0, length), constructionCenter, {color: 0x00FFFF}); // Z - Blue
     }
 }
 
