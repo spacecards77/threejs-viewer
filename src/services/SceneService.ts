@@ -5,11 +5,12 @@ import {LineService} from "./LineService.ts";
 import type {IGeometry} from "../entities/IGeometry.ts";
 import {ModelViewer} from "../controls/ModelViewer.ts";
 import {config} from "../config.ts";
+import {AssertUtils} from "../utils/assert/AssertUtils.ts";
 
 export class SceneService {
-    private readonly scene!: THREE.Scene;
-    private readonly camera!: OrthographicCamera;
-    //private readonly cameraControls!: CustomTrackballControls;
+    public readonly drawService: DrawService;
+    private readonly mainScene!: THREE.Scene;
+    private readonly mainCamera!: OrthographicCamera;
 
     private renderer!: THREE.WebGLRenderer;
     private frustumSize = 40;
@@ -21,20 +22,15 @@ export class SceneService {
     constructor() {
         this.updateSizeForContainer();
 
-        if (!this.canvasContainer) return;
-
-        this.scene = this.createScene();
-        this.camera = this.createCamera();
+        this.mainScene = this.createScene();
+        this.mainCamera = this.createOrthographicCamera();
         this.renderer = this.createRenderer();
-        //this.cameraControls = this.createCameraControls(this.camera);
 
-
+        this.drawService = this.createDrawService();
         this.setupEventListeners();
 
         const animate = () => {
             requestAnimationFrame(animate);
-
-            //this.cameraControls.update();
 
             this.render();
         };
@@ -45,25 +41,21 @@ export class SceneService {
     public updateSceneForGeometry(geometry: IGeometry) {
         let center = geometry.getCenter();
 
-        this.camera.position.set(center.x, center.y + 50, center.z - 10);
-        this.camera.up = new THREE.Vector3(0, 0, -1);
-        this.camera.lookAt(center);
+        this.mainCamera.position.set(center.x, center.y + 50, center.z - 10);
+        this.mainCamera.up = new THREE.Vector3(0, 0, -1);
+        this.mainCamera.lookAt(center);
 
         if (geometry?.Model) {
-            new ModelViewer(geometry.Model, this.renderer.domElement, this.camera);
+            new ModelViewer(geometry.Model, this.renderer.domElement, this.mainCamera);
         }
-
-        //this.cameraControls.target = center;
     }
 
     private updateSizeForContainer(): void {
         this.canvasContainer = document.getElementById('app');
-        if (!this.canvasContainer) {
-            console.error('SceneService: element with id="app" not found.');
-            return;
-        }
-        this.width = this.canvasContainer.clientWidth;
-        this.height = this.canvasContainer.clientHeight;
+        AssertUtils.IsNotNull(this.canvasContainer, 'SceneService: element with id="app" not found.');
+
+        this.width = this.canvasContainer?.clientWidth ?? 0;
+        this.height = this.canvasContainer?.clientHeight ?? 0;
     }
 
     private createScene(): THREE.Scene {
@@ -78,41 +70,27 @@ export class SceneService {
         return scene;
     }
 
-    private createCamera(): OrthographicCamera {
+    private createOrthographicCamera(): OrthographicCamera {
         const aspect = this.width / this.height;
 
         return new OrthographicCamera(
-            this.frustumSize * aspect / -2,  // left
-            this.frustumSize * aspect / 2,   // right
-            this.frustumSize / 2,            // top
-            this.frustumSize / -2,           // bottom
-            0.1,                             // near
-            1000                             // far
+            this.frustumSize * aspect / -2, // left
+            this.frustumSize * aspect / 2,  // right
+            this.frustumSize / 2,           // top
+            this.frustumSize / -2,          // bottom
+            0.1,                       // near
+            1000                        // far
         );
     }
 
-    /*private createCameraControls(camera: OrthographicCamera) {
-        const cameraControls = new CustomTrackballControls(camera, this.renderer.domElement);
-
-        cameraControls.staticMoving = true;
-
-        cameraControls.keys = ['ControlLeft', '', ''];
-        cameraControls.mouseButtons = {
-            MIDDLE: THREE.MOUSE.PAN,
-            LEFT: THREE.MOUSE.ROTATE,
-            RIGHT: THREE.MOUSE.ROTATE
-        };
-        cameraControls.panSpeed = 3;
-
-        return cameraControls;
-    }*/
-
-    /*private updateRendererPixelRatioAndSize(): void {
+    /*
+      //Поддержка широкоформатных экранов с высоким DPI
+      private updateRendererPixelRatioAndSize(): void {
         if (!this.renderer) return;
         // cap devicePixelRatio for performance (2 is a reasonable default cap)
         const capped = Math.min(window.devicePixelRatio || 1, 2);
         this.renderer.setPixelRatio(capped);
-        this.renderer.setSize(this.width, this.height);
+        //this.renderer.setSize(this.width, this.height);
     }*/
 
     private createRenderer(): THREE.WebGLRenderer {
@@ -124,26 +102,24 @@ export class SceneService {
 
     private setupEventListeners(): void {
         window.addEventListener('resize', () => {
-            // refresh stored container and sizes
             this.updateSizeForContainer();
 
             const aspect = this.width / this.height;
-            this.camera.left = this.frustumSize * aspect / -2;
-            this.camera.right = this.frustumSize * aspect / 2;
-            this.camera.top = this.frustumSize / 2;
-            this.camera.bottom = this.frustumSize / -2;
-            this.camera.updateProjectionMatrix();
-            //this.cameraControls.handleResize();
+            this.mainCamera.left = this.frustumSize * aspect / -2;
+            this.mainCamera.right = this.frustumSize * aspect / 2;
+            this.mainCamera.top = this.frustumSize / 2;
+            this.mainCamera.bottom = this.frustumSize / -2;
+            this.mainCamera.updateProjectionMatrix();
 
             this.renderer.setSize(this.width, this.height);
         });
     }
 
     private render() {
-        this.renderer.render(this.scene, this.camera);
+        this.renderer.render(this.mainScene, this.mainCamera);
     }
 
-    getDrawService() {
-        return new DrawService(new LineService(this.scene));
+    createDrawService() {
+        return new DrawService(new LineService(this.mainScene));
     }
 }

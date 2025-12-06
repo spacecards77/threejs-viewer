@@ -12,7 +12,7 @@ export class App {
 
     constructor() {
         this.sceneService = new SceneService();
-        this.drawService = this.sceneService.getDrawService();
+        this.drawService = this.sceneService.drawService;
 
         // Create a single callback handler and pass it to both the UI loader and the auto-loader
         new LoadJsonUiController(this.handleConstructionLoaded);
