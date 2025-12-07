@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import {type Camera, type Scene, Vector3} from 'three';
+import {type Camera, Quaternion, type Scene, Vector3} from 'three';
 import {Construction} from '../model';
 import {LineService} from './line/LineService.ts';
 import {config} from "../config.ts";
@@ -26,7 +26,7 @@ export class DrawService {
 
         this.mainLineService.clearAllLines();
 
-        this.mainLineService.setLineParentPosition(center);
+        this.mainLineService.geometryView.position.copy(center);
 
         const geometry = construction.geometry;
         for (const member of geometry.members) {
@@ -52,11 +52,11 @@ export class DrawService {
         if (config.debugMode)
             console.log(`Model displayed: ${geometry.members.length} members drawn`);
 
-        construction.geometry.GeometryView = this.mainLineService.getGroupParent();
+        construction.geometry.GeometryView = this.mainLineService.geometryView;
     }
 
-    public renderCoordinateAxes(coordinateBegin: Vector3) {
-        this.coordinateAxesService.renderCoordinateAxes(coordinateBegin);
+    public renderCoordinateAxes(coordinateBeginPosition: Vector3, parentQuaternion: Quaternion) {
+        this.coordinateAxesService.renderCoordinateAxes(coordinateBeginPosition, parentQuaternion);
     }
 
     private createServices(center: Vector3) {

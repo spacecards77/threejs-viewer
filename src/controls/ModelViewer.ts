@@ -313,7 +313,7 @@ export class ModelViewer {
 
         // Get object's current up vector in world space
         const currentObjectUp = this.desiredUp.clone();
-        currentObjectUp.applyQuaternion(this.geometryView.Parent.quaternion);
+        currentObjectUp.applyQuaternion(this.geometryView.quaternion);
         currentObjectUp.normalize();
 
         // Calculate angle between current up and desired up
@@ -350,7 +350,7 @@ export class ModelViewer {
         rotationQuaternion.setFromAxisAngle(objectToCamera, angle * sign);
 
         // Apply the rotation to the object's orientation
-        this.geometryView.Parent.quaternion.multiplyQuaternions(rotationQuaternion, this.geometryView.Parent.quaternion);
+        this.geometryView.quaternion.multiplyQuaternions(rotationQuaternion, this.geometryView.Parent.quaternion);
     }
 
     /**

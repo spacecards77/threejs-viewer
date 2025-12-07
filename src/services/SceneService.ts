@@ -45,17 +45,17 @@ export class SceneService {
         const animate = () => {
             requestAnimationFrame(animate);
 
-            this.uiCamera.position.copy(this.mainCamera.position);
-            this.uiCamera.quaternion.copy(this.mainCamera.quaternion);
-
             this.renderer.clear();
             this.renderMain();
 
             this.renderer.clearDepth();
 
+            this.uiCamera.position.copy(this.mainCamera.position);
+            this.uiCamera.quaternion.copy(this.mainCamera.quaternion);
+
             if (this.geometryView) {
                 this.geometryView.CoordinateBegin.getWorldPosition(this.coordinateBeginPosition);
-                this.drawService.renderCoordinateAxes(this.coordinateBeginPosition);
+                this.drawService.renderCoordinateAxes(this.coordinateBeginPosition, this.geometryView.quaternion);
             }
             this.renderUi();
         };

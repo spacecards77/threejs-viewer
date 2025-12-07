@@ -1,4 +1,4 @@
-import {Group, Object3D, type Scene, type Vector3} from "three";
+import {Group, Object3D, type Quaternion, type Scene, type Vector3} from "three";
 import {config} from "../config.ts";
 
 export class GeometryView {
@@ -7,6 +7,10 @@ export class GeometryView {
 
     get position(): Vector3 {
         return this.Parent.position;
+    }
+
+    get quaternion(): Quaternion {
+        return this.Parent.quaternion;
     }
 
     constructor(scene: Scene, center: Vector3) {

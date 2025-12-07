@@ -155,12 +155,4 @@ export class LineService {
         }
         this.dots = [];
     }
-
-    setLineParentPosition(position: THREE.Vector3) {
-        this.geometryView.position.copy(position);
-    }
-
-    getGroupParent() {
-        return this.geometryView;
-    }
 }

@@ -1,5 +1,5 @@
 import {LineService} from "./LineService.ts";
-import {Camera, Scene, Vector3} from "three";
+import {Camera, type Quaternion, Scene, Vector3} from "three";
 
 export class CoordinateAxesService extends LineService {
     private readonly uiCamera: Camera;
@@ -22,10 +22,11 @@ export class CoordinateAxesService extends LineService {
         this.drawArrow(start, new Vector3(start.x, start.y, start.z + length), {color: 0x00FFFF}); // Z - Blue
     }
 
-    renderCoordinateAxes(coordinateBegin: Vector3) {
-        const position = coordinateBegin.clone();
+    renderCoordinateAxes(coordinateBeginPosition: Vector3, parentQuaternion: Quaternion) {
+        const position = coordinateBeginPosition.clone();
         position.project(this.mainCamera);
         position.unproject(this.uiCamera);
         this.geometryView.position.copy(position);
+        this.geometryView.quaternion.copy(parentQuaternion);
     }
 }
