@@ -47,7 +47,7 @@ export class DrawService {
             this.mainLineService.drawSquare(position, { color: 0xFF0000, size: 3 });
         }
 
-        this.coordinateAxesService.drawCoordinateAxes(center, new Vector3(), 1);
+        this.coordinateAxesService.drawCoordinateAxes(center, new Vector3());
 
         if (config.debugMode)
             console.log(`Model displayed: ${geometry.members.length} members drawn`);

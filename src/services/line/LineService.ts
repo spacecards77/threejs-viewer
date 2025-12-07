@@ -12,8 +12,8 @@ export class LineService {
     private cones: THREE.Mesh[] = [];
     private readonly scene: THREE.Scene;
     public readonly geometryView: GeometryView;
-    private coneRadius: number = 0.08;
-    private coneHeight: number = 0.3;
+    private coneRadius: number = 0.15;
+    private coneHeight: number = 0.5;
 
     constructor(scene: THREE.Scene, center: Vector3) {
         this.scene = scene;
