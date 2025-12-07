@@ -6,22 +6,22 @@ import {ModelViewer} from "../controls/ModelViewer.ts";
 import {config} from "../config.ts";
 import {AssertUtils} from "../utils/assert/AssertUtils.ts";
 import type {GeometryView} from "../view/GeometryView.ts";
+import {RenderService} from './RenderService.ts';
 
 export class SceneService {
     public readonly drawService: DrawService;
-    private readonly mainScene: THREE.Scene;
-    private readonly mainCamera: OrthographicCamera;
-    private readonly uiScene: THREE.Scene;
-    private readonly uiCamera: OrthographicCamera;
+    readonly mainScene: THREE.Scene;
+    readonly mainCamera: OrthographicCamera;
+    readonly uiScene: THREE.Scene;
+    readonly uiCamera: OrthographicCamera;
 
-    private renderer!: THREE.WebGLRenderer;
+    private rendererService!: RenderService;
     private frustumSize = 40;
 
-    private canvasContainer: HTMLElement | null = null;
-    private width: number = 0;
-    private height: number = 0;
-    private geometryView: GeometryView | null = null;
-    private coordinateBeginPosition: Vector3 = new Vector3();
+    canvasContainer!: HTMLElement | null;
+    width: number = 0;
+    height: number = 0;
+    geometryView: GeometryView | null = null;
 
     constructor() {
         this.updateSizeForContainer();
@@ -32,35 +32,11 @@ export class SceneService {
         this.uiScene = this.createUiScene();
         this.uiCamera = this.createOrthographicCamera();
 
-        this.renderer = this.createRenderer();
-
         this.drawService = this.createDrawService();
 
+        this.rendererService = new RenderService(this);
+
         this.setupEventListeners();
-        this.prepareAndStartRender();
-    }
-
-    private prepareAndStartRender() {
-        this.renderer.autoClear = false;
-        const animate = () => {
-            requestAnimationFrame(animate);
-
-            this.renderer.clear();
-            this.renderMain();
-
-            this.renderer.clearDepth();
-
-            this.uiCamera.position.copy(this.mainCamera.position);
-            this.uiCamera.quaternion.copy(this.mainCamera.quaternion);
-
-            if (this.geometryView) {
-                this.geometryView.CoordinateBegin.getWorldPosition(this.coordinateBeginPosition);
-                this.drawService.renderCoordinateAxes(this.coordinateBeginPosition, this.geometryView.quaternion);
-            }
-            this.renderUi();
-        };
-
-        animate();
     }
 
     public updateSceneForGeometry(geometry: IGeometry) {
@@ -72,7 +48,7 @@ export class SceneService {
         this.mainCamera.lookAt(center);
 
         if (geometry?.GeometryView) {
-            new ModelViewer(geometry.GeometryView, this.renderer.domElement, this.mainCamera);
+            new ModelViewer(geometry.GeometryView, this.rendererService.domElement, this.mainCamera);
         }
     }
 
@@ -112,7 +88,6 @@ export class SceneService {
             1000                        // far
         );
     }
-
     /*
       //Поддержка широкоформатных экранов с высоким DPI
       private updateRendererPixelRatioAndSize(): void {
@@ -122,13 +97,6 @@ export class SceneService {
         this.renderer.setPixelRatio(capped);
         //this.renderer.setSize(this.width, this.height);
     }*/
-
-    private createRenderer(): THREE.WebGLRenderer {
-        const renderer = new THREE.WebGLRenderer({antialias: true});
-        renderer.setSize(this.width, this.height);
-        this.canvasContainer!.appendChild(renderer.domElement);
-        return renderer;
-    }
 
     private setupEventListeners(): void {
         window.addEventListener('resize', () => {
@@ -141,16 +109,8 @@ export class SceneService {
             this.mainCamera.bottom = this.frustumSize / -2;
             this.mainCamera.updateProjectionMatrix();
 
-            this.renderer.setSize(this.width, this.height);
+            this.rendererService.setSize(this.width, this.height);
         });
-    }
-
-    private renderMain() {
-        this.renderer.render(this.mainScene, this.mainCamera);
-    }
-
-    private renderUi() {
-        this.renderer.render(this.uiScene, this.uiCamera);
     }
 
     createDrawService() {
