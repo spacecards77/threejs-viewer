@@ -22,9 +22,7 @@ export class DrawService {
 
     drawConstruction(construction: Construction) {
         const center = construction.geometry.getCenter();
-        
-        this.mainLineService = new LineService(this.mainScene, center);
-        this.coordinateAxesService = new CoordinateAxesService(this.uiScene, center, this.mainCamera, this.uiCamera);
+        this.createServices(center);
 
         this.mainLineService.clearAllLines();
 
@@ -59,6 +57,18 @@ export class DrawService {
 
     public renderCoordinateAxes(coordinateBegin: Vector3) {
         this.coordinateAxesService.renderCoordinateAxes(coordinateBegin);
+    }
+
+    private createServices(center: Vector3) {
+        if (this.mainLineService) {
+            this.mainLineService.clearAllLines();
+        }
+        this.mainLineService = new LineService(this.mainScene, center);
+
+        if (this.coordinateAxesService) {
+            this.coordinateAxesService.clearAllLines();
+        }
+        this.coordinateAxesService = new CoordinateAxesService(this.uiScene, center, this.mainCamera, this.uiCamera);
     }
 }
 
