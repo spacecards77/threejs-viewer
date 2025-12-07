@@ -1,22 +1,23 @@
 import * as THREE from 'three';
-import {Color} from 'three';
+import {Color, type Vector3} from 'three';
 import {Line2} from 'three/addons/lines/Line2.js';
 import {LineMaterial} from "three/addons/lines/LineMaterial.js";
 import {LineGeometry} from "three/addons/lines/LineGeometry.js";
-import {config} from "../config.ts";
+import {config} from "../../config.ts";
+import {GeometryView} from "../../view/GeometryView.ts";
 
 export class LineService {
     private lines: Line2[] = [];
     private dots: THREE.Points[] = [];
     private cones: THREE.Mesh[] = [];
     private readonly scene: THREE.Scene;
-    private linesParent!: THREE.Group;
+    public readonly geometryView: GeometryView;
     private coneRadius: number = 0.08;
     private coneHeight: number = 0.3;
 
-    constructor(scene: THREE.Scene) {
+    constructor(scene: THREE.Scene, center: Vector3) {
         this.scene = scene;
-        this.createLinesParent();
+        this.geometryView = new GeometryView(this.scene, center);
     }
 
     public drawSquare(position: THREE.Vector3,
@@ -24,9 +25,9 @@ export class LineService {
     ) {
         const geometry = new THREE.BufferGeometry();
         geometry.setAttribute('position', new THREE.Float32BufferAttribute([
-                position.x - this.linesParent.position.x,
-                position.y - this.linesParent.position.y,
-                position.z - this.linesParent.position.z],
+                position.x - this.geometryView.position.x,
+                position.y - this.geometryView.position.y,
+                position.z - this.geometryView.position.z],
             3));
 
         const material = new THREE.PointsMaterial({
@@ -49,7 +50,7 @@ export class LineService {
         // хотя сам квадрат все еще должен быть виден.
         dot.frustumCulled = false;
 
-        this.linesParent.add(dot);
+        this.geometryView.add(dot);
         this.dots.push(dot);
     }
 
@@ -62,8 +63,8 @@ export class LineService {
             vertexColors: true,
         });
         // avoid mutating caller-provided vectors by cloning before subtracting
-        const p1 = start.clone().sub(this.linesParent.position);
-        const p2 = end.clone().sub(this.linesParent.position);
+        const p1 = start.clone().sub(this.geometryView.position);
+        const p2 = end.clone().sub(this.geometryView.position);
         const geometry = new LineGeometry().setFromPoints([p1, p2]);
         // LineGeometry.setColors expects an array of RGB float values per vertex
         // (r, g, b) for each vertex. For two vertices we must supply 6 floats.
@@ -77,7 +78,7 @@ export class LineService {
                 + lineCenter.y.toFixed(2)
                 + ',' + lineCenter.z.toFixed(2) + ')';
 
-        this.linesParent.add(line);
+        this.geometryView.add(line);
         this.lines.push(line);
     }
 
@@ -102,7 +103,7 @@ export class LineService {
 
         // Position the cone at the end point
         // Cone's default orientation is pointing up (Y+), so we need to align it with direction
-        const conePosition = end.clone().sub(this.linesParent.position);
+        const conePosition = end.clone().sub(this.geometryView.position);
         cone.position.copy(conePosition);
 
         // Align cone with the direction vector
@@ -116,7 +117,7 @@ export class LineService {
                 + end.y.toFixed(2)
                 + ',' + end.z.toFixed(2) + ')';
 
-        this.linesParent.add(cone);
+        this.geometryView.add(cone);
         this.cones.push(cone);
     }
 
@@ -128,7 +129,7 @@ export class LineService {
             } else {
                 line.material.dispose();
             }
-            this.linesParent.remove(line);
+            this.geometryView.remove(line);
         }
         this.lines = [];
 
@@ -139,7 +140,7 @@ export class LineService {
             } else {
                 cone.material.dispose();
             }
-            this.linesParent.remove(cone);
+            this.geometryView.remove(cone);
         }
         this.cones = [];
 
@@ -150,27 +151,16 @@ export class LineService {
             } else {
                 dot.material.dispose();
             }
-            this.linesParent.remove(dot);
+            this.geometryView.remove(dot);
         }
         this.dots = [];
-
-        this.createLinesParent();
-    }
-
-    private createLinesParent() {
-        if (this.linesParent)
-            this.scene.remove(this.linesParent);
-
-        this.linesParent = new THREE.Group();
-        this.linesParent.name = 'LinesParent';
-        this.scene.add(this.linesParent);
     }
 
     setLineParentPosition(position: THREE.Vector3) {
-        this.linesParent.position.copy(position);
+        this.geometryView.position.copy(position);
     }
 
-    getLineParent() {
-        return this.linesParent;
+    getGroupParent() {
+        return this.geometryView;
     }
 }

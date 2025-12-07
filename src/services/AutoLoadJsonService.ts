@@ -1,7 +1,8 @@
 // AutoLoadJsonService: responsible for fetching a JSON file from the public folder,
 // deserializing it to a Construction and drawing it via DrawService.
 import {JsonService} from './JsonService';
-import type {Construction} from '../entities';
+import type {Construction} from '../model';
+import {AssertUtils} from "../utils/assert/AssertUtils.ts";
 
 export class AutoLoadJsonService {
     private readonly jsonService: JsonService;
@@ -18,9 +19,7 @@ export class AutoLoadJsonService {
         const normalized = url.startsWith('/') ? url : `/${url}`;
         try {
             const resp = await fetch(normalized);
-            if (!resp.ok) {
-                throw new Error(`Failed to fetch ${normalized}: ${resp.status} ${resp.statusText}`);
-            }
+            AssertUtils.IsTrue(resp.ok,`Failed to fetch ${normalized}: ${resp.status} ${resp.statusText}`);
 
             const text = await resp.text();
             const construction: Construction = this.jsonService.deserialize(text);

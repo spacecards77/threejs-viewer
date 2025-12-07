@@ -1,5 +1,5 @@
 import { JsonService } from './JsonService';
-import { Construction } from '../entities';
+import { Construction } from '../model';
 
 export class LoadJsonUiController {
     private readonly loadBtn: HTMLButtonElement | null;

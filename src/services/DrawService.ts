@@ -1,20 +1,34 @@
 import * as THREE from 'three';
-import { Construction } from '../entities';
-import { LineService } from './LineService';
-import {Vector3} from "three";
+import {type Camera, type Scene, Vector3} from 'three';
+import {Construction} from '../model';
+import {LineService} from './line/LineService.ts';
 import {config} from "../config.ts";
+import {CoordinateAxesService} from "./line/CoordinateAxesService.ts";
 
 export class DrawService {
-    private lineService: LineService;
-    constructor(lineService: LineService) {
-        this.lineService = lineService;
+    private readonly mainScene: Scene;
+    private readonly uiScene: Scene;
+    private readonly mainCamera: Camera;
+    private readonly uiCamera: Camera;
+    private mainLineService!: LineService;
+    private coordinateAxesService!: CoordinateAxesService;
+
+    constructor(mainScene: Scene, uiScene: Scene, mainCamera: THREE.Camera, uiCamera: THREE.Camera) {
+        this.mainScene = mainScene;
+        this.uiScene = uiScene;
+        this.mainCamera = mainCamera;
+        this.uiCamera = uiCamera;
     }
 
     drawConstruction(construction: Construction) {
-        this.lineService.clearAllLines();
-
         const center = construction.geometry.getCenter();
-        this.lineService.setLineParentPosition(center);
+        
+        this.mainLineService = new LineService(this.mainScene, center);
+        this.coordinateAxesService = new CoordinateAxesService(this.uiScene, center, this.mainCamera, this.uiCamera);
+
+        this.mainLineService.clearAllLines();
+
+        this.mainLineService.setLineParentPosition(center);
 
         const geometry = construction.geometry;
         for (const member of geometry.members) {
@@ -27,27 +41,24 @@ export class DrawService {
             }
             const p1 = new THREE.Vector3(n1.x, n1.y, n1.z);
             const p2 = new THREE.Vector3(n2.x, n2.y, n2.z);
-            this.lineService.drawLine(p1, p2, { color: 0x99CCCC});
+            this.mainLineService.drawLine(p1, p2, { color: 0x99CCCC});
         }
 
         for (const node of geometry.nodes) {
             const position = new THREE.Vector3(node.x, node.y, node.z);
-            this.lineService.drawSquare(position, { color: 0xFF0000, size: 3 });
+            this.mainLineService.drawSquare(position, { color: 0xFF0000, size: 3 });
         }
 
-        this.drawArrows();
+        this.coordinateAxesService.drawCoordinateAxes(center, new Vector3(), 1);
 
         if (config.debugMode)
             console.log(`Model displayed: ${geometry.members.length} members drawn`);
 
-        construction.geometry.Model = this.lineService.getLineParent();
+        construction.geometry.GeometryView = this.mainLineService.getGroupParent();
     }
 
-    private drawArrows() {
-        const length = 1;
-        this.lineService.drawArrow(new Vector3(), new Vector3(length, 0, 0), {color: 0xBA0000}); // X - Red
-        this.lineService.drawArrow(new Vector3(), new Vector3(0, length, 0), {color: 0x00C500}); // Y - Green
-        this.lineService.drawArrow(new Vector3(), new Vector3(0, 0, length), {color: 0x00FFFF}); // Z - Blue
+    public renderCoordinateAxes(coordinateBegin: Vector3) {
+        this.coordinateAxesService.renderCoordinateAxes(coordinateBegin);
     }
 }
 

@@ -1,5 +1,5 @@
 import { SceneService } from './services/SceneService.ts';
-import { Construction } from "./entities";
+import { Construction } from "./model";
 import type {DrawService} from "./services/DrawService.ts";
 import { LoadJsonUiController } from './services/LoadJsonUiController.ts';
 import { config } from './config.ts';

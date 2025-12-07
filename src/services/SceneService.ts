@@ -1,16 +1,18 @@
 import * as THREE from 'three';
-import {OrthographicCamera} from 'three';
+import {OrthographicCamera, Vector3} from 'three';
 import {DrawService} from "./DrawService.ts";
-import {LineService} from "./LineService.ts";
-import type {IGeometry} from "../entities/IGeometry.ts";
+import type {IGeometry} from "../model/IGeometry.ts";
 import {ModelViewer} from "../controls/ModelViewer.ts";
 import {config} from "../config.ts";
 import {AssertUtils} from "../utils/assert/AssertUtils.ts";
+import type {GeometryView} from "../view/GeometryView.ts";
 
 export class SceneService {
     public readonly drawService: DrawService;
-    private readonly mainScene!: THREE.Scene;
-    private readonly mainCamera!: OrthographicCamera;
+    private readonly mainScene: THREE.Scene;
+    private readonly mainCamera: OrthographicCamera;
+    private readonly uiScene: THREE.Scene;
+    private readonly uiCamera: OrthographicCamera;
 
     private renderer!: THREE.WebGLRenderer;
     private frustumSize = 40;
@@ -18,35 +20,59 @@ export class SceneService {
     private canvasContainer: HTMLElement | null = null;
     private width: number = 0;
     private height: number = 0;
+    private geometryView: GeometryView | null = null;
+    private coordinateBeginPosition: Vector3 = new Vector3();
 
     constructor() {
         this.updateSizeForContainer();
 
-        this.mainScene = this.createScene();
+        this.mainScene = this.createMainScene();
         this.mainCamera = this.createOrthographicCamera();
+
+        this.uiScene = this.createUiScene();
+        this.uiCamera = this.createOrthographicCamera();
+
         this.renderer = this.createRenderer();
 
         this.drawService = this.createDrawService();
-        this.setupEventListeners();
 
+        this.setupEventListeners();
+        this.prepareAndStartRender();
+    }
+
+    private prepareAndStartRender() {
+        this.renderer.autoClear = false;
         const animate = () => {
             requestAnimationFrame(animate);
 
-            this.render();
+            this.uiCamera.position.copy(this.mainCamera.position);
+            this.uiCamera.quaternion.copy(this.mainCamera.quaternion);
+
+            this.renderer.clear();
+            this.renderMain();
+
+            this.renderer.clearDepth();
+
+            if (this.geometryView) {
+                this.geometryView.CoordinateBegin.getWorldPosition(this.coordinateBeginPosition);
+                this.drawService.renderCoordinateAxes(this.coordinateBeginPosition);
+            }
+            this.renderUi();
         };
 
         animate();
     }
 
     public updateSceneForGeometry(geometry: IGeometry) {
-        let center = geometry.getCenter();
+        this.geometryView = geometry.GeometryView;
+        const center = geometry.getCenter();
 
         this.mainCamera.position.set(center.x, center.y + 50, center.z - 10);
-        this.mainCamera.up = new THREE.Vector3(0, 0, -1);
+        this.mainCamera.up = new Vector3(0, 0, -1);
         this.mainCamera.lookAt(center);
 
-        if (geometry?.Model) {
-            new ModelViewer(geometry.Model, this.renderer.domElement, this.mainCamera);
+        if (geometry?.GeometryView) {
+            new ModelViewer(geometry.GeometryView, this.renderer.domElement, this.mainCamera);
         }
     }
 
@@ -58,7 +84,7 @@ export class SceneService {
         this.height = this.canvasContainer?.clientHeight ?? 0;
     }
 
-    private createScene(): THREE.Scene {
+    private createMainScene(): THREE.Scene {
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x000000);
 
@@ -68,6 +94,10 @@ export class SceneService {
         }
 
         return scene;
+    }
+
+    private createUiScene(): THREE.Scene {
+        return new THREE.Scene();
     }
 
     private createOrthographicCamera(): OrthographicCamera {
@@ -115,11 +145,15 @@ export class SceneService {
         });
     }
 
-    private render() {
+    private renderMain() {
         this.renderer.render(this.mainScene, this.mainCamera);
     }
 
+    private renderUi() {
+        this.renderer.render(this.uiScene, this.uiCamera);
+    }
+
     createDrawService() {
-        return new DrawService(new LineService(this.mainScene));
+        return new DrawService(this.mainScene, this.uiScene, this.mainCamera, this.uiCamera);
     }
 }

@@ -1,5 +1,5 @@
 // filepath: c:\projects\PGS\babylonjs-viewer\src\services\JsonService.ts
-import { Construction } from '../entities';
+import { Construction } from '../model';
 
 /**
  * JsonService is responsible for converting a JSON string (in the expected schema)

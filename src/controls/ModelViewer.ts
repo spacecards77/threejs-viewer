@@ -1,12 +1,13 @@
 import * as THREE from 'three';
 import {Object3D, Vector3, Vector2, MOUSE, PerspectiveCamera, OrthographicCamera} from 'three';
+import type {GeometryView} from "../view/GeometryView.ts";
 
 const STATE = { NONE: -1, ROTATE: 0, ZOOM: 1, PAN: 2 };
 
 export class ModelViewer {
-    private object: Object3D;
+    private readonly geometryView: GeometryView;
     private domElement: HTMLElement;
-    private camera: THREE.Camera;
+    private readonly camera: THREE.Camera;
 
     // Speeds
     private rotationSpeed: number = 0.002;
@@ -48,8 +49,8 @@ export class ModelViewer {
     private panStart: Vector2 = new Vector2();
     private panEnd: Vector2 = new Vector2();
 
-    constructor(object: Object3D, domElement: HTMLElement, camera: THREE.Camera) {
-        this.object = object;
+    constructor(object: GeometryView, domElement: HTMLElement, camera: THREE.Camera) {
+        this.geometryView = object;
         this.domElement = domElement;
         this.camera = camera;
 
@@ -240,17 +241,17 @@ export class ModelViewer {
 
     private rotateObject(deltaX: number, deltaY: number): void {
         const objectWorldPosition = new Vector3();
-        this.object.getWorldPosition(objectWorldPosition);
+        this.geometryView.Parent.getWorldPosition(objectWorldPosition);
 
         if (deltaX !== 0) {
             const rotationAngleY = deltaX * this.rotationSpeed;
-            this.rotateAroundWorldAxis(this.object, this.mouseXMoveRotationAxis, rotationAngleY, objectWorldPosition);
+            this.rotateAroundWorldAxis(this.geometryView.Parent, this.mouseXMoveRotationAxis, rotationAngleY, objectWorldPosition);
         }
 
         if (deltaY !== 0) {
             const rotationAngleX = deltaY * this.rotationSpeed;
 
-            this.rotateAroundWorldAxis(this.object, this.mouseYMoveRotationAxis, rotationAngleX, objectWorldPosition);
+            this.rotateAroundWorldAxis(this.geometryView.Parent, this.mouseYMoveRotationAxis, rotationAngleX, objectWorldPosition);
         }
     }
 
@@ -300,7 +301,7 @@ export class ModelViewer {
         this.camera.getWorldPosition(cameraWorldPosition);
 
         const objectWorldPosition = new Vector3();
-        this.object.getWorldPosition(objectWorldPosition);
+        this.geometryView.Parent.getWorldPosition(objectWorldPosition);
 
         // Calculate the axis from object to camera (rotation axis)
         const objectToCamera = new Vector3().subVectors(cameraWorldPosition, objectWorldPosition);
@@ -312,7 +313,7 @@ export class ModelViewer {
 
         // Get object's current up vector in world space
         const currentObjectUp = this.desiredUp.clone();
-        currentObjectUp.applyQuaternion(this.object.quaternion);
+        currentObjectUp.applyQuaternion(this.geometryView.Parent.quaternion);
         currentObjectUp.normalize();
 
         // Calculate angle between current up and desired up
@@ -349,7 +350,7 @@ export class ModelViewer {
         rotationQuaternion.setFromAxisAngle(objectToCamera, angle * sign);
 
         // Apply the rotation to the object's orientation
-        this.object.quaternion.multiplyQuaternions(rotationQuaternion, this.object.quaternion);
+        this.geometryView.Parent.quaternion.multiplyQuaternions(rotationQuaternion, this.geometryView.Parent.quaternion);
     }
 
     /**
@@ -366,7 +367,7 @@ export class ModelViewer {
                 this.camera.getWorldPosition(cameraWorldPosition);
 
                 const objectWorldPosition = new Vector3();
-                this.object.getWorldPosition(objectWorldPosition);
+                this.geometryView.Parent.getWorldPosition(objectWorldPosition);
 
                 // Calculate direction from camera to object
                 const direction = new Vector3().subVectors(objectWorldPosition, cameraWorldPosition);
@@ -405,7 +406,7 @@ export class ModelViewer {
 
             // Get object world position
             const objectWorldPosition = new Vector3();
-            this.object.getWorldPosition(objectWorldPosition);
+            this.geometryView.Parent.getWorldPosition(objectWorldPosition);
 
             // Calculate distance for scaling
             const distance = cameraWorldPosition.distanceTo(objectWorldPosition);
@@ -425,7 +426,7 @@ export class ModelViewer {
 
             // Apply pan to both camera and object
             //this.camera.position.add(panOffset);
-            this.object.position.add(panOffset.multiplyScalar(-1));
+            this.geometryView.position.add(panOffset.multiplyScalar(-1));
         }
 
         this.panStart.copy(this.panEnd);
