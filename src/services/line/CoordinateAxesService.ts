@@ -24,11 +24,14 @@ export class CoordinateAxesService extends LineService {
         this.drawArrow(start, new Vector3(start.x, start.y, start.z + length), {color: 0x00FFFF, linewidth: lineWidth}); // Z - Blue
     }
 
-    renderCoordinateAxes(coordinateBeginPosition: Vector3, parentQuaternion: Quaternion) {
-        const position = coordinateBeginPosition.clone();
-        position.project(this.mainCamera);
-        position.unproject(this.uiCamera);
-        this.geometryView.position.copy(position);
+    updateCoordinateAxes(parentQuaternion: Quaternion, coordinateBeginPosition: Vector3) {
         this.geometryView.quaternion.copy(parentQuaternion);
+
+        if (coordinateBeginPosition) {
+            const position = coordinateBeginPosition.clone();
+            position.project(this.mainCamera);
+            position.unproject(this.uiCamera);
+            this.geometryView.position.copy(position);
+        }
     }
 }

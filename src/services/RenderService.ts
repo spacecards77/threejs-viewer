@@ -58,7 +58,8 @@ export class RenderService {
         const geometryView = this.sceneService.geometryView;
         if (geometryView) {
             geometryView.CoordinateBegin.getWorldPosition(coordinateBeginPosition);
-            this.sceneService.drawService.renderCoordinateAxes(coordinateBeginPosition, geometryView.quaternion);
+            this.sceneService.drawService.updateConnectedCoordinateAxes(coordinateBeginPosition, geometryView.quaternion);
+            this.sceneService.drawService.updateStaticCoordinateAxes(geometryView.quaternion);
         }
 
         this.renderer.render(this.sceneService.uiScene, this.sceneService.uiCamera);

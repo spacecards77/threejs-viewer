@@ -11,7 +11,8 @@ export class DrawService {
     private readonly mainCamera: Camera;
     private readonly uiCamera: Camera;
     private mainLineService!: LineService;
-    private coordinateAxesService!: CoordinateAxesService;
+    private connectedAxesService!: CoordinateAxesService;
+    private staticAxesService!: CoordinateAxesService;
 
     constructor(mainScene: Scene, uiScene: Scene, mainCamera: THREE.Camera, uiCamera: THREE.Camera) {
         this.mainScene = mainScene;
@@ -47,7 +48,8 @@ export class DrawService {
             this.mainLineService.drawSquare(position, { color: 0xFF0000, size: 3 });
         }
 
-        this.coordinateAxesService.drawCoordinateAxes(center, new Vector3());
+        this.connectedAxesService.drawCoordinateAxes(center, new Vector3());
+        this.staticAxesService.drawCoordinateAxes(new Vector3(-13.5, 0, 6), new Vector3());
 
         if (config.debugMode)
             console.log(`Model displayed: ${geometry.members.length} members drawn`);
@@ -55,8 +57,14 @@ export class DrawService {
         construction.geometry.GeometryView = this.mainLineService.geometryView;
     }
 
-    public renderCoordinateAxes(coordinateBeginPosition: Vector3, parentQuaternion: Quaternion) {
-        this.coordinateAxesService.renderCoordinateAxes(coordinateBeginPosition, parentQuaternion);
+    public updateConnectedCoordinateAxes(coordinateBeginPosition: Vector3, parentQuaternion: Quaternion) {
+        this.connectedAxesService.updateCoordinateAxes(parentQuaternion, coordinateBeginPosition);
+    }
+
+    public updateStaticCoordinateAxes(parentQuaternion: Quaternion) {
+        // @ts-ignore
+        // Обновляем только поворот, позиция статичных осей не меняется
+        this.staticAxesService.updateCoordinateAxes(parentQuaternion);
     }
 
     private createServices(center: Vector3) {
@@ -65,10 +73,16 @@ export class DrawService {
         }
         this.mainLineService = new LineService(this.mainScene, center);
 
-        if (this.coordinateAxesService) {
-            this.coordinateAxesService.clearAllLines();
+        if (this.connectedAxesService) {
+            this.connectedAxesService.clearAllLines();
         }
-        this.coordinateAxesService = new CoordinateAxesService(this.uiScene, center, this.mainCamera, this.uiCamera);
+        this.connectedAxesService = new CoordinateAxesService(this.uiScene, center, this.mainCamera, this.uiCamera);
+
+        if (this.staticAxesService) {
+            this.staticAxesService.clearAllLines();
+        }
+        this.staticAxesService = new CoordinateAxesService(this.uiScene, center, this.mainCamera, this.uiCamera);
+
     }
 }
 
