@@ -11,39 +11,39 @@ export class DevException extends Error {
 
 export class AssertUtils {
     // Throws DevException if condition is false
-    public static IsTrue(condition: boolean, message: string, ...args: any[]): void {
+    public static isTrue(condition: boolean, message: string, ...args: any[]): void {
         if (!condition) {
-            AssertUtils.Fail(message, ...args);
+            AssertUtils.fail(message, ...args);
         }
     }
 
     // Throws DevException if condition is true
     public static IsFalse(condition: boolean, message: string, ...args: any[]): void {
         if (condition) {
-            AssertUtils.Fail(message, ...args);
+            AssertUtils.fail(message, ...args);
         }
     }
 
     // single generic Fail method: if called without a generic, T defaults to never (method returns never)
-    public static Fail<T = never>(message: string, ...args: any[]): T {
+    public static fail<T = never>(message: string, ...args: any[]): T {
         const formatted = AssertUtils.format(message, ...args);
         throw new DevException(formatted);
     }
 
-    public static IsNotNull(obj: any, message: string, ...args: any[]): void {
-        AssertUtils.IsTrue(obj != null, message, ...args);
+    public static isNotNull(obj: any, message: string, ...args: any[]): void {
+        AssertUtils.isTrue(obj != null, message, ...args);
     }
 
-    public static IsNotNullOrWhiteSpace(obj: string | null | undefined, message: string, ...args: any[]): void {
-        AssertUtils.IsTrue(obj != null && obj.toString().trim().length > 0, message, ...args);
+    public static isNotNullOrWhiteSpace(obj: string | null | undefined, message: string, ...args: any[]): void {
+        AssertUtils.isTrue(obj != null && obj.toString().trim().length > 0, message, ...args);
     }
 
-    public static IncorrectEnumValue(typeName: string, value: any): void {
-        AssertUtils.Fail(`Incorrect enum ${typeName} value ${value}`);
+    public static incorrectEnumValue(typeName: string, value: any): void {
+        AssertUtils.fail(`Incorrect enum ${typeName} value ${value}`);
     }
 
-    public static IsNull(obj: any, message: string, ...args: any[]): void {
-        AssertUtils.IsTrue(obj == null, message, ...args);
+    public static isNull(obj: any, message: string, ...args: any[]): void {
+        AssertUtils.isTrue(obj == null, message, ...args);
     }
 
     private static format(message: string, ...args: any[]): string {

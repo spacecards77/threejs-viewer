@@ -14,7 +14,7 @@ export class RenderService {
         this.renderer = new THREE.WebGLRenderer({antialias: true});
         this.renderer.setSize(this.sceneService.width, this.sceneService.height);
 
-        AssertUtils.IsNotNull(this.sceneService.canvasContainer, 'RendererService: canvasContainer is null.');
+        AssertUtils.isNotNull(this.sceneService.canvasContainer, 'RendererService: canvasContainer is null.');
         this.sceneService.canvasContainer?.appendChild(this.renderer.domElement);
 
         this.prepareAndStartRender();

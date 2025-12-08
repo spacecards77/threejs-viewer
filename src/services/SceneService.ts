@@ -39,22 +39,27 @@ export class SceneService {
         this.setupEventListeners();
     }
 
-    public updateSceneForGeometry(geometry: IGeometry) {
+    public prepareModelViewer(geometry: IGeometry) {
+        AssertUtils.isNotNull(geometry.GeometryView, 'SceneService: GeometryView is null.');
+
         this.geometryView = geometry.GeometryView;
+        new ModelViewer(this.geometryView!, this.rendererService.domElement, this.mainCamera);
+    }
+
+    public setupCameras(geometry: IGeometry) {
         const center = geometry.getCenter();
 
         this.mainCamera.position.set(center.x, center.y + 50, center.z - 10);
         this.mainCamera.up = new Vector3(0, 0, -1);
         this.mainCamera.lookAt(center);
 
-        if (geometry?.GeometryView) {
-            new ModelViewer(geometry.GeometryView, this.rendererService.domElement, this.mainCamera);
-        }
+        this.uiCamera.position.copy(this.mainCamera.position);
+        this.uiCamera.quaternion.copy(this.mainCamera.quaternion);
     }
 
     private updateSizeForContainer(): void {
         this.canvasContainer = document.getElementById('app');
-        AssertUtils.IsNotNull(this.canvasContainer, 'SceneService: element with id="app" not found.');
+        AssertUtils.isNotNull(this.canvasContainer, 'SceneService: element with id="app" not found.');
 
         this.width = this.canvasContainer?.clientWidth ?? 0;
         this.height = this.canvasContainer?.clientHeight ?? 0;
@@ -88,6 +93,7 @@ export class SceneService {
             1000                        // far
         );
     }
+
     /*
       //Поддержка широкоформатных экранов с высоким DPI
       private updateRendererPixelRatioAndSize(): void {

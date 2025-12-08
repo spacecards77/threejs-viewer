@@ -19,7 +19,7 @@ export class AutoLoadJsonService {
         const normalized = url.startsWith('/') ? url : `/${url}`;
         try {
             const resp = await fetch(normalized);
-            AssertUtils.IsTrue(resp.ok,`Failed to fetch ${normalized}: ${resp.status} ${resp.statusText}`);
+            AssertUtils.isTrue(resp.ok,`Failed to fetch ${normalized}: ${resp.status} ${resp.statusText}`);
 
             const text = await resp.text();
             const construction: Construction = this.jsonService.deserialize(text);
