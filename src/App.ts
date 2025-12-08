@@ -38,8 +38,9 @@ export class App {
 
     private processConstruction(construction: Construction) {
         this.construction = construction;
+        //должно быть до отрисовки Ui, чтобы привязать статические оси к позиции на экране
         this.sceneService.setupCameras(construction.geometry);
-        this.drawService.drawConstruction(this.construction);
+        this.drawService.addConstructionToScene(this.construction);
         this.sceneService.prepareModelViewer(construction.geometry);
     }
 }

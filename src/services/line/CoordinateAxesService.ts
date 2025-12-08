@@ -26,24 +26,6 @@ export class CoordinateAxesService extends LineService {
     }
 
     public drawCoordinateAxesStatic(axesPosition: Vector3) {
-        // Ensure camera projection and world matrices are up-to-date. When loading happens
-        // at different times (autoload vs UI file picker) camera matrices can be stale
-        // which makes unproject() return different results. Update them explicitly here.
-        try {
-            // update projection matrix if camera type supports it (OrthographicCamera/PerspectiveCamera)
-            // @ts-ignore
-            if (typeof this.uiCamera.updateProjectionMatrix === 'function') {
-                // @ts-ignore
-                this.uiCamera.updateProjectionMatrix();
-            }
-            // make sure world matrix is current
-            this.uiCamera.updateMatrixWorld(true);
-        } catch (e) {
-            // ignore - defensive, but avoid breaking drawing on unexpected camera implementations
-            // (keep behavior predictable)
-            // console.warn('CoordinateAxesService: failed to update camera matrices', e);
-        }
-
         const centerPosition = axesPosition.unproject(this.uiCamera);
         this.drawCoordinateAxesConnected(centerPosition, new Vector3());
     }

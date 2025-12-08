@@ -52,9 +52,13 @@ export class SceneService {
         this.mainCamera.position.set(center.x, center.y + 50, center.z - 10);
         this.mainCamera.up = new Vector3(0, 0, -1);
         this.mainCamera.lookAt(center);
+        this.mainCamera.updateProjectionMatrix();
+        this.mainCamera.updateMatrixWorld(true);
 
         this.uiCamera.position.copy(this.mainCamera.position);
         this.uiCamera.quaternion.copy(this.mainCamera.quaternion);
+        this.uiCamera.updateProjectionMatrix();
+        this.uiCamera.updateMatrixWorld(true);
     }
 
     private updateSizeForContainer(): void {

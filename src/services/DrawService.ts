@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import {type Camera, Quaternion, type Scene, Vector3} from 'three';
-import {Construction} from '../model';
+import {Construction, Geometry} from '../model';
 import {LineService} from './line/LineService.ts';
 import {config} from "../config.ts";
 import {CoordinateAxesService} from "./line/CoordinateAxesService.ts";
@@ -21,15 +21,24 @@ export class DrawService {
         this.uiCamera = uiCamera;
     }
 
-    drawConstruction(construction: Construction) {
+    //ARCHITECTURE: Разделить на DrawGeometry и DrawUi
+    addConstructionToScene(construction: Construction) {
         const center = construction.geometry.getCenter();
+
         this.createServices(center);
+
+        this.addGeometryToScene(construction.geometry);
+
+        this.addUiToScene(center);
+    }
+
+    private addGeometryToScene(geometry: Geometry) {
+        const center = geometry.getCenter();
 
         this.mainLineService.clearAllLines();
 
         this.mainLineService.geometryView.position.copy(center);
 
-        const geometry = construction.geometry;
         for (const member of geometry.members) {
             const n1 = geometry.idToNode.get(member.node1Id);
             const n2 = geometry.idToNode.get(member.node2Id);
@@ -40,25 +49,27 @@ export class DrawService {
             }
             const p1 = new THREE.Vector3(n1.x, n1.y, n1.z);
             const p2 = new THREE.Vector3(n2.x, n2.y, n2.z);
-            this.mainLineService.drawLine(p1, p2, { color: 0x99CCCC});
+            this.mainLineService.drawLine(p1, p2, {color: 0x99CCCC});
         }
 
         for (const node of geometry.nodes) {
             const position = new THREE.Vector3(node.x, node.y, node.z);
-            this.mainLineService.drawSquare(position, { color: 0xFF0000, size: 3 });
+            this.mainLineService.drawSquare(position, {color: 0xFF0000, size: 3});
         }
 
+        if (config.debugMode)
+            console.log(`Model displayed: ${geometry.members.length} members drawn`);
+
+        geometry.GeometryView = this.mainLineService.geometryView;
+    }
+
+    private addUiToScene(center: Vector3) {
         this.connectedAxesService.drawCoordinateAxesConnected(center, new Vector3());
         this.staticAxesService.drawCoordinateAxesStatic(new Vector3(
             -0.7192165152812904,
             -0.6836717450206091,
             -0.9314959336646511,
         ));
-
-        if (config.debugMode)
-            console.log(`Model displayed: ${geometry.members.length} members drawn`);
-
-        construction.geometry.GeometryView = this.mainLineService.geometryView;
     }
 
     public updateConnectedCoordinateAxes(coordinateBeginPosition: Vector3, parentQuaternion: Quaternion) {
