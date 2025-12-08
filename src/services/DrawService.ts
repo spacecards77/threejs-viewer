@@ -66,9 +66,9 @@ export class DrawService {
     private addUiToScene(center: Vector3) {
         this.connectedAxesService.drawCoordinateAxesConnected(center, new Vector3());
         this.staticAxesService.drawCoordinateAxesStatic(new Vector3(
-            -0.7192165152812904,
-            -0.6836717450206091,
-            -0.9314959336646511,
+            -.93,
+            -0.65,
+            -0.9,
         ));
     }
 
