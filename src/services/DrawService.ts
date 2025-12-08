@@ -48,8 +48,12 @@ export class DrawService {
             this.mainLineService.drawSquare(position, { color: 0xFF0000, size: 3 });
         }
 
-        this.connectedAxesService.drawCoordinateAxes(center, new Vector3());
-        this.staticAxesService.drawCoordinateAxes(new Vector3(-13.5, 0, 6), new Vector3());
+        this.connectedAxesService.drawCoordinateAxesConnected(center, new Vector3());
+        this.staticAxesService.drawCoordinateAxesStatic(new Vector3(
+            -0.7192165152812904,
+            -0.6836717450206091,
+            -0.9314959336646511,
+        ));
 
         if (config.debugMode)
             console.log(`Model displayed: ${geometry.members.length} members drawn`);
